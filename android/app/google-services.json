@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "763112290655",
+    "project_id": "manajemen-tugas-570d7",
+    "storage_bucket": "manajemen-tugas-570d7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:763112290655:android:dbcf8c9428fe3ad8f41eea",
+        "android_client_info": {
+          "package_name": "com.example.manajemen_tugas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDRk7LSdcOabyPHcq-6tM1AkpBoIBWAjds"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
