@@ -97,6 +97,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
+                    Text(
+                      'Login',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
                     SizedBox(height: 20),
                     TextFormField(
                       controller: _emailController,
