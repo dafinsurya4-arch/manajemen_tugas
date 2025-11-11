@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import '../services/task_service.dart';
 import '../models/task_model.dart';
+import '../services/group_service.dart';
+import '../models/group_model.dart';
 
 class DashboardScreen extends StatefulWidget {
   @override
@@ -30,7 +32,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (currentUserId == null) return Center(child: Text('Silakan login'));
 
     return StreamBuilder<List<TaskModel>>(
-      stream: Provider.of<TaskService>(context).getPersonalTasks(currentUserId),
+      stream: Provider.of<TaskService>(context).getRelevantTasks(currentUserId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
           return Center(child: CircularProgressIndicator());
@@ -65,128 +67,164 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
         }
 
-        final tasks = snapshot.data ?? [];
+  final tasks = snapshot.data ?? [];
 
-        // Compute statistics from the live task list so the chart stays in sync
-        final int completed = tasks.where((t) => t.status == 'selesai').length;
-        final int inProgress = tasks.where((t) => t.status == 'progres').length;
-        final int pending = tasks.where((t) => t.status == 'tertunda').length;
+  // Compute statistics from the live task list so the chart stays in sync
 
-        final stats = {'completed': completed, 'inProgress': inProgress, 'pending': pending};
+        // Group tasks by groupId and build a grouped list. We need group names
+        // for groupId values; fetch user's groups and build a map.
+        return StreamBuilder<List<GroupModel>>(
+          stream: Provider.of<GroupService>(context).getGroupsForUser(currentUserId),
+          builder: (context, gSnapshot) {
+            final groups = gSnapshot.data ?? [];
+            final Map<String, String> groupNames = {for (var g in groups) g.id: g.name};
 
-        // Build the full column: chart + controls + task list
-        final chartWidget = Container(
-          height: 200,
-          padding: EdgeInsets.all(16),
-          child: SfCartesianChart(
-            primaryXAxis: CategoryAxis(),
-            series: <CartesianSeries<ChartData, String>>[
-              ColumnSeries<ChartData, String>(
-                dataSource: [
-                  ChartData('Selesai', stats['completed']!, Colors.green),
-                  ChartData('Progress', stats['inProgress']!, Colors.orange),
-                  ChartData('Tertunda', stats['pending']!, Colors.red),
-                ],
-                xValueMapper: (ChartData data, _) => data.x,
-                yValueMapper: (ChartData data, _) => data.y,
-                color: Color.fromRGBO(8, 142, 255, 1),
-                dataLabelSettings: DataLabelSettings(isVisible: true),
-              )
-            ],
-          ),
-        );
+            final Map<String, List<TaskModel>> groupTasks = {};
+            final List<TaskModel> individualTasks = [];
 
-        return Column(
-          children: [
-            chartWidget,
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () => setState(() {}),
-                    icon: Icon(Icons.refresh),
-                    label: Text('Refresh Statistik'),
-                  ),
+            for (var t in tasks) {
+              if (t.groupId != null && t.groupId!.isNotEmpty) {
+                groupTasks.putIfAbsent(t.groupId!, () => []).add(t);
+              } else {
+                individualTasks.add(t);
+              }
+            }
+
+            final chartStats = {
+              'completed': tasks.where((t) => t.status == 'selesai').length,
+              'inProgress': tasks.where((t) => t.status == 'progres').length,
+              'pending': tasks.where((t) => t.status == 'tertunda').length,
+            };
+
+            final chartWidget = Container(
+              height: 200,
+              padding: EdgeInsets.all(16),
+              child: SfCartesianChart(
+                primaryXAxis: CategoryAxis(),
+                series: <CartesianSeries<ChartData, String>>[
+                  ColumnSeries<ChartData, String>(
+                    dataSource: [
+                      ChartData('Selesai', chartStats['completed']!, Colors.green),
+                      ChartData('Progress', chartStats['inProgress']!, Colors.orange),
+                      ChartData('Tertunda', chartStats['pending']!, Colors.red),
+                    ],
+                    xValueMapper: (ChartData data, _) => data.x,
+                    yValueMapper: (ChartData data, _) => data.y,
+                    color: Color.fromRGBO(8, 142, 255, 1),
+                    dataLabelSettings: DataLabelSettings(isVisible: true),
+                  )
                 ],
               ),
-            ),
-            SizedBox(height: 16),
-            Expanded(
-              child: tasks.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.assignment, size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text(
-                            'Belum ada tugas',
-                            style: TextStyle(fontSize: 18, color: Colors.grey),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Tambahkan tugas baru untuk memulai',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
+            );
+
+            return Column(
+              children: [
+                chartWidget,
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () => setState(() {}),
+                        icon: Icon(Icons.refresh),
+                        label: Text('Refresh Statistik'),
                       ),
-                    )
-                  : ListView.builder(
-                      itemCount: tasks.length,
-                      itemBuilder: (context, index) {
-                        final task = tasks[index];
-                        return Card(
-                          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                          child: ListTile(
-                            title: Text(task.title),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(task.description),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Deadline: ${_formatDate(task.deadline)}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 16),
+                Expanded(
+                  child: ListView(
+                    children: [
+                      // Render group tasks sections
+                      for (var entry in groupTasks.entries)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              child: Text(
+                                'Kelompok: ${groupNames[entry.key] ?? entry.key}',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            ...entry.value.map((task) => Card(
+                              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                              child: ListTile(
+                                title: Text(task.title),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(task.description),
+                                    SizedBox(height: 4),
+                                    Text('Deadline: ${_formatDate(task.deadline)}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            trailing: PopupMenuButton<String>(
-                              tooltip: 'Ubah status',
-                              icon: _getStatusChip(task.status),
-                              onSelected: (value) async {
-                                try {
-                                  await Provider.of<TaskService>(context, listen: false)
-                                      .updateTaskStatus(task.id, value);
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Status diperbarui')),
-                                    );
-                                  }
-                                } catch (e) {
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Gagal memperbarui status: $e')),
-                                    );
-                                  }
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                PopupMenuItem(value: 'selesai', child: Text('Selesai')),
-                                PopupMenuItem(value: 'progres', child: Text('Progres')),
-                                PopupMenuItem(value: 'tertunda', child: Text('Tertunda')),
-                              ],
-                            ),
-                            onTap: () {},
+                                trailing: PopupMenuButton<String>(
+                                  tooltip: 'Ubah status',
+                                  icon: _getStatusChip(task.status),
+                                  onSelected: (value) async {
+                                    try {
+                                      await Provider.of<TaskService>(context, listen: false).updateTaskStatus(task.id, value);
+                                      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Status diperbarui')));
+                                    } catch (e) {
+                                      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal memperbarui status: $e')));
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(value: 'selesai', child: Text('Selesai')),
+                                    PopupMenuItem(value: 'progres', child: Text('Progres')),
+                                    PopupMenuItem(value: 'tertunda', child: Text('Tertunda')),
+                                  ],
+                                ),
+                              ),
+                            )).toList(),
+                          ],
+                        ),
+
+                      // Individual tasks section
+                      if (individualTasks.isNotEmpty)
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Text('Tugas Pribadi', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        ),
+                      ...individualTasks.map((task) => Card(
+                        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        child: ListTile(
+                          title: Text(task.title),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(task.description),
+                              SizedBox(height: 4),
+                              Text('Deadline: ${_formatDate(task.deadline)}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                            ],
                           ),
-                        );
-                      },
-                    ),
-            ),
-          ],
+                          trailing: PopupMenuButton<String>(
+                            tooltip: 'Ubah status',
+                            icon: _getStatusChip(task.status),
+                            onSelected: (value) async {
+                              try {
+                                await Provider.of<TaskService>(context, listen: false).updateTaskStatus(task.id, value);
+                                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Status diperbarui')));
+                              } catch (e) {
+                                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal memperbarui status: $e')));
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              PopupMenuItem(value: 'selesai', child: Text('Selesai')),
+                              PopupMenuItem(value: 'progres', child: Text('Progres')),
+                              PopupMenuItem(value: 'tertunda', child: Text('Tertunda')),
+                            ],
+                          ),
+                        ),
+                      )).toList(),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );

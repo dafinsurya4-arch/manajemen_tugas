@@ -115,4 +115,15 @@ class GroupService {
       'groups': FieldValue.arrayRemove([groupId]),
     });
   }
+
+  /// Stream groups where the given user is a member.
+  Stream<List<GroupModel>> getGroupsForUser(String userId) {
+    return _firestore
+        .collection('groups')
+        .where('members', arrayContains: userId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => GroupModel.fromMap(doc.data()))
+            .toList());
+  }
 }
