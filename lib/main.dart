@@ -15,8 +15,6 @@ import 'screens/main_app.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  // Force sign-out on cold start so the user must log in again after closing the app.
-  // This makes the app ask for credentials every time it is started freshly.
   await FirebaseAuth.instance.signOut();
   runApp(MyApp());
 }
@@ -47,8 +45,6 @@ class MyApp extends StatelessWidget {
 class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // Use FirebaseAuth authStateChanges directly. AuthService does not expose
-    // a direct authStateChanges stream in the current implementation.
     final authService = Provider.of<AuthService>(context, listen: false);
 
     return StreamBuilder<User?>(
