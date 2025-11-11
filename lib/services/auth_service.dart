@@ -9,15 +9,17 @@ class AuthService {
   User? get currentUser => _auth.currentUser;
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  Future<UserModel?> register(String fullName, String email, String password) async {
+  Future<UserModel?> register(
+    String fullName,
+    String email,
+    String password,
+  ) async {
     try {
       print('🚀 MEMULAI REGISTRASI: $email');
-      
+
       // Step 1: Create user in Firebase Auth
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       print('✅ USER FIREBASE BERHASIL DIBUAT: ${userCredential.user!.uid}');
 
@@ -30,18 +32,21 @@ class AuthService {
       );
 
       await _firestore.collection('users').doc(user.uid).set(user.toMap());
-      
+
       print('✅ DATA USER BERHASIL DISIMPAN DI FIRESTORE: ${user.uid}');
-      
+
       // Verify the data was saved
-      DocumentSnapshot doc = await _firestore.collection('users').doc(user.uid).get();
+      DocumentSnapshot doc = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .get();
       print('✅ VERIFIKASI DATA: ${doc.exists ? "EXISTS" : "NOT EXISTS"}');
-      
+
       return user;
     } on FirebaseAuthException catch (e) {
       print('❌ FIREBASE AUTH ERROR: ${e.code}');
       print('❌ ERROR MESSAGE: ${e.message}');
-      
+
       // Handle specific error codes
       switch (e.code) {
         case 'email-already-in-use':
@@ -70,7 +75,7 @@ class AuthService {
   Future<UserModel?> login(String email, String password) async {
     try {
       print('🚀 MEMULAI LOGIN: $email');
-      
+
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
@@ -79,8 +84,11 @@ class AuthService {
       print('✅ LOGIN BERHASIL: ${userCredential.user!.uid}');
 
       // Get user data from Firestore
-      DocumentSnapshot userDoc = await _firestore.collection('users').doc(userCredential.user!.uid).get();
-      
+      DocumentSnapshot userDoc = await _firestore
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .get();
+
       if (userDoc.exists) {
         print('✅ DATA USER DITEMUKAN DI FIRESTORE');
         return UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
@@ -102,18 +110,24 @@ class AuthService {
     print('✅ LOGOUT BERHASIL');
   }
 
+  // Stream that emits the latest UserModel whenever the Firestore user document changes.
+  // This listens to auth state changes and, when a user is logged in, switches to the
+  // user's document snapshots so updates (like added group IDs) propagate to UI.
   Stream<UserModel?> get userDataStream {
-    return _auth.authStateChanges().asyncMap((user) async {
-      if (user != null) {
-        print('🔍 CHECKING USER DATA: ${user.uid}');
-        DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-          print('✅ USER DATA FOUND IN STREAM');
-          return UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
-        }
-        print('❌ USER DATA NOT FOUND IN STREAM');
+    return _auth.authStateChanges().asyncExpand((user) {
+      if (user == null) {
+        return Stream.value(null);
       }
-      return null;
+
+      // Listen to user's document snapshots and map to UserModel
+      return _firestore.collection('users').doc(user.uid).snapshots().map((
+        snap,
+      ) {
+        if (snap.exists && snap.data() != null) {
+          return UserModel.fromMap(snap.data() as Map<String, dynamic>);
+        }
+        return null;
+      });
     });
   }
 }

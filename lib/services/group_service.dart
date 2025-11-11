@@ -9,21 +9,40 @@ class GroupService {
     if (groupIds.isEmpty) {
       return Stream.value([]);
     }
-    
+
     return _firestore
         .collection('groups')
         .where('id', whereIn: groupIds)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => GroupModel.fromMap(doc.data()))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => GroupModel.fromMap(doc.data()))
+              .toList(),
+        );
   }
 
   Future<void> createGroup(GroupModel group) async {
+    // Create group document
     await _firestore.collection('groups').doc(group.id).set(group.toMap());
+
+    // Add group id to leader's user document so getUserGroups can find it
+    try {
+      await _firestore.collection('users').doc(group.leader).update({
+        'groups': FieldValue.arrayUnion([group.id]),
+      });
+    } catch (e) {
+      // If update fails (e.g., user doc not found), attempt to create/merge the field
+      await _firestore.collection('users').doc(group.leader).set({
+        'groups': [group.id],
+      }, SetOptions(merge: true));
+    }
   }
 
-  Future<void> inviteUser(String groupId, String leaderId, String userEmail) async {
+  Future<bool> inviteUser(
+    String groupId,
+    String leaderId,
+    String userEmail,
+  ) async {
     // Cari user berdasarkan email
     var userQuery = await _firestore
         .collection('users')
@@ -48,18 +67,25 @@ class GroupService {
           .collection('notifications')
           .doc(notification.id)
           .set(notification.toMap());
+      return true;
     }
+
+    return false;
   }
 
-  Future<void> acceptInvitation(String notificationId, String groupId, String userId) async {
+  Future<void> acceptInvitation(
+    String notificationId,
+    String groupId,
+    String userId,
+  ) async {
     // Tambah user ke group
     await _firestore.collection('groups').doc(groupId).update({
-      'members': FieldValue.arrayUnion([userId])
+      'members': FieldValue.arrayUnion([userId]),
     });
 
     // Update user groups
     await _firestore.collection('users').doc(userId).update({
-      'groups': FieldValue.arrayUnion([groupId])
+      'groups': FieldValue.arrayUnion([groupId]),
     });
 
     // Hapus notifikasi
@@ -72,21 +98,21 @@ class GroupService {
 
   Future<void> removeMember(String groupId, String userId) async {
     await _firestore.collection('groups').doc(groupId).update({
-      'members': FieldValue.arrayRemove([userId])
+      'members': FieldValue.arrayRemove([userId]),
     });
 
     await _firestore.collection('users').doc(userId).update({
-      'groups': FieldValue.arrayRemove([groupId])
+      'groups': FieldValue.arrayRemove([groupId]),
     });
   }
 
   Future<void> leaveGroup(String groupId, String userId) async {
     await _firestore.collection('groups').doc(groupId).update({
-      'members': FieldValue.arrayRemove([userId])
+      'members': FieldValue.arrayRemove([userId]),
     });
 
     await _firestore.collection('users').doc(userId).update({
-      'groups': FieldValue.arrayRemove([groupId])
+      'groups': FieldValue.arrayRemove([groupId]),
     });
   }
 }

@@ -24,7 +24,8 @@ class GroupModel {
       'description': description,
       'leader': leader,
       'members': members,
-      'createdAt': createdAt,
+      // Store as Firestore Timestamp for consistency
+      'createdAt': Timestamp.fromDate(createdAt),
     };
   }
 
@@ -35,7 +36,11 @@ class GroupModel {
       description: map['description'] ?? '',
       leader: map['leader'] ?? '',
       members: List<String>.from(map['members'] ?? []),
-      createdAt: (map['createdAt'] as Timestamp).toDate(),
+      createdAt: map['createdAt'] is Timestamp
+          ? (map['createdAt'] as Timestamp).toDate()
+          : (map['createdAt'] is DateTime
+                ? map['createdAt'] as DateTime
+                : DateTime.now()),
     );
   }
 }

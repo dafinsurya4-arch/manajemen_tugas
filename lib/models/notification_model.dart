@@ -33,7 +33,8 @@ class NotificationModel {
       'toUser': toUser,
       'groupId': groupId,
       'isRead': isRead,
-      'createdAt': createdAt,
+      // Store as Firestore Timestamp for consistency
+      'createdAt': Timestamp.fromDate(createdAt),
     };
   }
 
@@ -47,7 +48,11 @@ class NotificationModel {
       toUser: map['toUser'] ?? '',
       groupId: map['groupId'],
       isRead: map['isRead'] ?? false,
-      createdAt: (map['createdAt'] as Timestamp).toDate(),
+      createdAt: map['createdAt'] is Timestamp
+          ? (map['createdAt'] as Timestamp).toDate()
+          : (map['createdAt'] is DateTime
+                ? map['createdAt'] as DateTime
+                : DateTime.now()),
     );
   }
 }

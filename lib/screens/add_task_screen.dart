@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/task_service.dart';
 import '../models/task_model.dart';
 import 'main_app.dart';
+import '../screens/group_picker_screen.dart';
+import '../models/group_model.dart';
 
 class AddTaskScreen extends StatefulWidget {
   @override
@@ -15,6 +17,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _deadlineController = TextEditingController();
+  GroupModel? _selectedGroup;
 
   String _status = 'tertunda';
   String _collaboration = 'individu';
@@ -30,8 +33,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
-        _deadlineController.text = 
-          "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
+        _deadlineController.text =
+            "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
       });
     }
   }
@@ -46,6 +49,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         status: _status,
         collaboration: _collaboration,
         userId: 'current_user_id', // Ganti dengan user ID
+        groupId: _selectedGroup?.id,
+        assignedTo: null,
         createdBy: 'current_user_id', // Ganti dengan user ID
         createdAt: DateTime.now(),
       );
@@ -62,9 +67,33 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             status: task.status,
             collaboration: task.collaboration,
             userId: currentUserId,
+            groupId: task.groupId,
+            assignedTo: null,
             createdBy: currentUserId,
             createdAt: task.createdAt,
           );
+        }
+
+        // If collaboration is kelompok, ensure a group was selected and the current user is the group's leader
+        if (_collaboration == 'kelompok') {
+          if (_selectedGroup == null) {
+            if (mounted)
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Pilih kelompok terlebih dahulu')),
+              );
+            return;
+          }
+          if (currentUserId != _selectedGroup!.leader) {
+            if (mounted)
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Hanya ketua kelompok yang dapat menambahkan tugas kelompok',
+                  ),
+                ),
+              );
+            return;
+          }
         }
 
         await Provider.of<TaskService>(context, listen: false).addTask(task);
@@ -74,9 +103,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         // tab), replace the whole route with MainApp to ensure the
         // dashboard is visible and we don't end up with a blank screen.
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Tugas berhasil ditambahkan')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Tugas berhasil ditambahkan')));
         }
 
         if (Navigator.canPop(context)) {
@@ -90,9 +119,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       } catch (e) {
         print('Error saving task: $e');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal menyimpan tugas: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Gagal menyimpan tugas: $e')));
         }
       }
     }
@@ -100,8 +129,15 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(16),
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: bottomInset + 16,
+      ),
       child: Form(
         key: _formKey,
         child: Column(
@@ -156,7 +192,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ),
               items: [
                 DropdownMenuItem(value: 'tertunda', child: Text('Tertunda')),
-                DropdownMenuItem(value: 'progres', child: Text('Dalam Progress')),
+                DropdownMenuItem(
+                  value: 'progres',
+                  child: Text('Dalam Progress'),
+                ),
                 DropdownMenuItem(value: 'selesai', child: Text('Selesai')),
               ],
               onChanged: (value) {
@@ -174,7 +213,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ),
               items: [
                 DropdownMenuItem(value: 'individu', child: Text('Individu')),
-                // Tambahkan opsi kelompok jika user punya group
+                DropdownMenuItem(value: 'kelompok', child: Text('Kelompok')),
               ],
               onChanged: (value) {
                 setState(() {
@@ -182,11 +221,36 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 });
               },
             ),
+            SizedBox(height: 12),
+            if (_collaboration == 'kelompok')
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final selected = await Navigator.push<GroupModel?>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => GroupPickerScreen(),
+                          ),
+                        );
+                        if (selected != null) {
+                          setState(() {
+                            _selectedGroup = selected;
+                          });
+                        }
+                      },
+                      child: Text(
+                        _selectedGroup == null
+                            ? 'Pilih Kelompok'
+                            : 'Kelompok: ${_selectedGroup!.name}',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _saveTask,
-              child: Text('Simpan Tugas'),
-            ),
+            ElevatedButton(onPressed: _saveTask, child: Text('Simpan Tugas')),
           ],
         ),
       ),

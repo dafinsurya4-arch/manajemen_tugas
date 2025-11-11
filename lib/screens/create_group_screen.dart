@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/group_service.dart';
 import '../models/group_model.dart';
+import '../services/auth_service.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   @override
@@ -15,30 +16,41 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
   Future<void> _createGroup() async {
     if (_formKey.currentState!.validate()) {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final currentUid = authService.currentUser?.uid;
+
+      if (currentUid == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('User tidak ditemukan, silakan login ulang')),
+        );
+        return;
+      }
+
       GroupModel group = GroupModel(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: _nameController.text,
         description: _descriptionController.text,
-        leader: 'current_user_id', // Ganti dengan user ID
-        members: ['current_user_id'], // Ganti dengan user ID
+        leader: currentUid,
+        members: [currentUid],
         createdAt: DateTime.now(),
       );
 
-      await Provider.of<GroupService>(context, listen: false).createGroup(group);
-      
+      await Provider.of<GroupService>(
+        context,
+        listen: false,
+      ).createGroup(group);
+
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kelompok berhasil dibuat')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Kelompok berhasil dibuat')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Buat Kelompok Baru'),
-      ),
+      appBar: AppBar(title: Text('Buat Kelompok Baru')),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Form(
