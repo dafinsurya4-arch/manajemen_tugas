@@ -16,7 +16,7 @@ class TaskService {
           final tasks = snapshot.docs
               .map((doc) => TaskModel.fromMap(doc.data()))
               .toList();
-          
+
           // Sorting di memory sementara
           tasks.sort((a, b) => a.deadline.compareTo(b.deadline));
           return tasks;
@@ -34,7 +34,7 @@ class TaskService {
           final tasks = snapshot.docs
               .map((doc) => TaskModel.fromMap(doc.data()))
               .toList();
-          
+
           tasks.sort((a, b) => a.deadline.compareTo(b.deadline));
           return tasks;
         });
@@ -51,7 +51,7 @@ class TaskService {
           final tasks = snapshot.docs
               .map((doc) => TaskModel.fromMap(doc.data()))
               .toList();
-          
+
           tasks.sort((a, b) => a.deadline.compareTo(b.deadline));
           return tasks;
         });
@@ -79,7 +79,9 @@ class TaskService {
 
       // Hitung statistik
       int completed = allTasks.where((task) => task.status == 'selesai').length;
-      int inProgress = allTasks.where((task) => task.status == 'progres').length;
+      int inProgress = allTasks
+          .where((task) => task.status == 'progres')
+          .length;
       int pending = allTasks.where((task) => task.status == 'tertunda').length;
 
       return {
@@ -98,8 +100,15 @@ class TaskService {
   }
 
   Future<void> updateTaskStatus(String taskId, String status) async {
+    await _firestore.collection('tasks').doc(taskId).update({'status': status});
+  }
+
+  /// Assign a task to a user. If [assigneeId] is null, the task will be unassigned.
+  Future<void> updateTaskAssignment(String taskId, String? assigneeId) async {
     await _firestore.collection('tasks').doc(taskId).update({
-      'status': status,
+      'assignedTo': assigneeId,
+      // Optionally set status to 'progres' when assigned and to 'tertunda' when unassigned
+      'status': assigneeId != null ? 'progres' : 'tertunda',
     });
   }
 
