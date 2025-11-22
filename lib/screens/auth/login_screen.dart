@@ -44,12 +44,12 @@ class _LoginScreenState extends State<LoginScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Login gagal. Periksa email dan password.'),
+                content: Text('Masuk gagal. Periksa email dan kata sandi.'),
                 backgroundColor: Colors.red,
               ),
             );
           } else {
-            print('SNACKBAR (late): Login gagal. Periksa email dan password.');
+            print('SNACKBAR (late): Masuk gagal. Periksa email dan kata sandi.');
           }
         }
       } catch (e) {
@@ -79,103 +79,152 @@ class _LoginScreenState extends State<LoginScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text('Manajemen Tugas'),
-          bottom: TabBar(
-            tabs: [
-              Tab(icon: Icon(Icons.login), text: 'Login'),
-              Tab(icon: Icon(Icons.person_add), text: 'Register'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            // Login Form
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    Text(
-                      'Login',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 20),
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email),
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Email harus diisi';
-                        }
-                        if (!value.contains('@')) {
-                          return 'Email tidak valid';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _passwordController,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.lock),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                        ),
-                      ),
-                      obscureText: _obscurePassword,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Password harus diisi';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 24),
-                    _isLoading
-                        ? CircularProgressIndicator()
-                        : SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _login,
-                              child: Text(
-                                'Login',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(vertical: 15),
-                              ),
-                            ),
-                          ),
-                    SizedBox(height: 16),
-                    TextButton(
-                      onPressed: () {
-                        // Forgot password functionality
-                      },
-                      child: Text('Lupa Password?'),
-                    ),
-                  ],
+        body: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(height: 40),
+                RichText(
+                  text: TextSpan(
+                    style: TextStyle(color: Colors.black87, fontSize: 28),
+                    children: [
+                      TextSpan(text: 'Edu', style: TextStyle(fontWeight: FontWeight.normal)),
+                      TextSpan(text: 'Track', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
                 ),
-              ),
+                SizedBox(height: 16),
+                Container(
+                  constraints: BoxConstraints(maxWidth: 700),
+                  padding: EdgeInsets.all(20),
+                  margin: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      TabBar(
+                        tabs: [
+                          Tab(icon: Icon(Icons.login), text: 'Masuk'),
+                          Tab(icon: Icon(Icons.person_add), text: 'Daftar'),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      // Use the TabController as a Listenable and an IndexedStack so the
+                      // container height adapts to the currently visible child.
+                      Builder(
+                        builder: (context) {
+                          final controller = DefaultTabController.of(context);
+                          return AnimatedBuilder(
+                            animation: controller,
+                            builder: (context, child) {
+                              final index = controller.index;
+                              return IndexedStack(
+                                index: index,
+                                children: [
+                                  // Login form (no title)
+                                  SingleChildScrollView(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: Form(
+                                        key: _formKey,
+                                        child: Column(
+                                          children: [
+                                            SizedBox(height: 5),
+                                            Text('Silakan masuk untuk melanjutkan', style: TextStyle(color: Colors.grey[700]), textAlign: TextAlign.center),
+                                            SizedBox(height: 25),
+                                            TextFormField(
+                                              controller: _emailController,
+                                              decoration: InputDecoration(
+                                                labelText: 'Email',
+                                                border: OutlineInputBorder(),
+                                                prefixIcon: Icon(Icons.email),
+                                                contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                                              ),
+                                              keyboardType: TextInputType.emailAddress,
+                                              validator: (value) {
+                                                if (value == null || value.isEmpty) {
+                                                  return 'Email harus diisi';
+                                                }
+                                                if (!value.contains('@')) {
+                                                  return 'Email tidak valid';
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                            SizedBox(height: 16),
+                                            TextFormField(
+                                              controller: _passwordController,
+                                              decoration: InputDecoration(
+                                                labelText: 'Kata Sandi',
+                                                border: OutlineInputBorder(),
+                                                prefixIcon: Icon(Icons.lock),
+                                                suffixIcon: IconButton(
+                                                  icon: Icon(
+                                                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                                                  ),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      _obscurePassword = !_obscurePassword;
+                                                    });
+                                                  },
+                                                ),
+                                                contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                                              ),
+                                              obscureText: _obscurePassword,
+                                              validator: (value) {
+                                                if (value == null || value.isEmpty) {
+                                                  return 'Kata Sandi harus diisi';
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                            SizedBox(height: 24),
+                                            _isLoading
+                                                ? CircularProgressIndicator()
+                                                : SizedBox(
+                                                    width: double.infinity,
+                                                    child: ElevatedButton(
+                                                      onPressed: _login,
+                                                      child: Text(
+                                                        'Masuk',
+                                                        style: TextStyle(fontSize: 16),
+                                                      ),
+                                                      style: ElevatedButton.styleFrom(
+                                                        padding: EdgeInsets.symmetric(vertical: 15),
+                                                      ),
+                                                    ),
+                                                  ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  // Register form
+                                  SingleChildScrollView(
+                                    child: RegisterScreen(),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            // Register Form
-            RegisterScreen(),
-          ],
+          ),
         ),
       ),
     );

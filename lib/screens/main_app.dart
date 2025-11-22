@@ -39,7 +39,15 @@ class _MainAppState extends State<MainApp> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Manajemen Tugas'),
+        title: RichText(
+          text: TextSpan(
+            style: TextStyle(color: Colors.black, fontSize: 20),
+            children: [
+              TextSpan(text: 'Edu', style: TextStyle(fontWeight: FontWeight.normal)),
+              TextSpan(text: 'Track', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
         actions: [
           if (_currentUserId != null)
             StreamBuilder<int>(

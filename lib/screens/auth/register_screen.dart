@@ -15,6 +15,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   String _debugInfo = '';
+  bool _obscurePassword = true;
+  bool _obscureConfirm = true;
 
   void _updateDebugInfo(String info) {
     // Only update state if this State object is still mounted.
@@ -33,21 +35,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
       if (_passwordController.text != _confirmPasswordController.text) {
-        _updateDebugInfo('Password tidak sama');
+        _updateDebugInfo('Kata Sandi tidak sama');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Password dan konfirmasi password tidak sama'),
+            content: Text('Kata Sandi dan konfirmasi kata sandi tidak sama'),
             backgroundColor: Colors.red,
           ),
         );
         return;
-      }
-
-      if (mounted) {
-        setState(() {
-          _isLoading = true;
-          _debugInfo = 'Memulai proses registrasi...';
-        });
       } else {
         _debugInfo = 'Memulai proses registrasi...';
       }
@@ -85,8 +80,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _passwordController.clear();
           _confirmPasswordController.clear();
           
-          // Kembali ke login screen setelah registrasi berhasil
-          Navigator.pop(context);
+          // Kembali ke login tab/screen setelah registrasi berhasil
+          final tabController = DefaultTabController.maybeOf(context);
+          if (tabController != null) {
+            tabController.animateTo(0);
+          } else if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
         } else {
           _updateDebugInfo('Registrasi GAGAL - user null');
           ScaffoldMessenger.of(context).showSnackBar(
@@ -125,17 +125,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              Text(
-                'Registrasi',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 20),
-              
               // Debug Info
               if (_debugInfo.isNotEmpty)
                 Container(
@@ -153,12 +147,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
 
+              SizedBox(height: 5),
+              Text('Silakan daftar untuk membuat akun', style: TextStyle(color: Colors.grey[700]), textAlign: TextAlign.center),
+              SizedBox(height: 25),
               TextFormField(
                 controller: _fullNameController,
                 decoration: InputDecoration(
                   labelText: 'Nama Lengkap',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person),
+                  contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -174,6 +172,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   labelText: 'Email',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.email),
+                  contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
@@ -190,17 +189,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
               TextFormField(
                 controller: _passwordController,
                 decoration: InputDecoration(
-                  labelText: 'Password',
+                  labelText: 'Kata Sandi',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirm ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureConfirm = !_obscureConfirm;
+                      });
+                    },
+                  ),
+                  contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
                 ),
-                obscureText: true,
+                obscureText: _obscureConfirm,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Password harus diisi';
+                    return 'Kata Sandi harus diisi';
                   }
                   if (value.length < 6) {
-                    return 'Password minimal 6 karakter';
+                    return 'Kata Sandi minimal 6 karakter';
                   }
                   return null;
                 },
@@ -209,14 +219,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
               TextFormField(
                 controller: _confirmPasswordController,
                 decoration: InputDecoration(
-                  labelText: 'Konfirmasi Password',
+                  labelText: 'Konfirmasi Kata Sandi',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                  contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
                 ),
-                obscureText: true,
+                obscureText: _obscurePassword,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Konfirmasi password harus diisi';
+                    return 'Konfirmasi kata sandi harus diisi';
                   }
                   return null;
                 },
@@ -235,7 +256,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: ElevatedButton(
                         onPressed: _register,
                         child: Text(
-                          'Register',
+                          'Daftar',
                           style: TextStyle(fontSize: 16),
                         ),
                         style: ElevatedButton.styleFrom(
@@ -244,12 +265,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
               SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('Sudah punya akun? Login di sini'),
-              ),
             ],
           ),
         ),

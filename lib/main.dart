@@ -30,15 +30,46 @@ class MyApp extends StatelessWidget {
         Provider<NotificationService>(create: (_) => NotificationService()),
       ],
       child: MaterialApp(
-        title: 'Manajemen Tugas',
+        title: 'EduTrack',
         theme: ThemeData(
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        home: AuthWrapper(),
+        // Always show the SplashLauncher on cold app start. AuthWrapper
+        // should not display the splashscreen during auth state waits or
+        // during login transitions — we'll show a lightweight loading UI
+        // instead when auth stream / user lookups are pending.
+        home: SplashLauncher(),
         debugShowCheckedModeBanner: false,
       ),
     );
+  }
+}
+
+class SplashLauncher extends StatefulWidget {
+  @override
+  _SplashLauncherState createState() => _SplashLauncherState();
+}
+
+class _SplashLauncherState extends State<SplashLauncher> {
+  @override
+  void initState() {
+    super.initState();
+    _start();
+  }
+
+  void _start() async {
+    // Show splash for 2 seconds, then navigate to the auth wrapper.
+    await Future.delayed(Duration(seconds: 2));
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => AuthWrapper()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SplashScreen();
   }
 }
 
@@ -51,7 +82,11 @@ class AuthWrapper extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return SplashScreen();
+          // Avoid re-showing the splash while the auth stream warms up
+          // after login/changes. Use a small loading indicator instead.
+          return Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
         
         if (snapshot.hasData && snapshot.data != null) {
@@ -59,7 +94,11 @@ class AuthWrapper extends StatelessWidget {
             future: _getUserData(authService, snapshot.data!.uid),
             builder: (context, userSnapshot) {
               if (userSnapshot.connectionState == ConnectionState.waiting) {
-                return SplashScreen();
+                // Likewise, show the same small loading UI while we fetch
+                // user profile data rather than the full splash screen.
+                return Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
               }
               
               if (userSnapshot.hasData && userSnapshot.data != null) {

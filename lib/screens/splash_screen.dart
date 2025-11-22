@@ -31,12 +31,26 @@ class _SplashScreenState extends State<SplashScreen> {
               color: Colors.white,
             ),
             SizedBox(height: 20),
-            Text(
-              'Manajemen Tugas',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+            RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Edu',
+                    style: TextStyle(
+                      fontSize: 32,
+                      color: Colors.white,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                  TextSpan(
+                    text: 'Track',
+                    style: TextStyle(
+                      fontSize: 32,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
             SizedBox(height: 10),
