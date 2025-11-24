@@ -11,6 +11,8 @@ import '../models/task_model.dart';
 import 'package:intl/intl.dart';
 
 class CollaborationScreen extends StatefulWidget {
+  const CollaborationScreen({super.key});
+
   @override
   _CollaborationScreenState createState() => _CollaborationScreenState();
 }
@@ -24,10 +26,7 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
       stream: authService.userDataStream,
       builder: (context, userSnapshot) {
         if (!userSnapshot.hasData) {
-          return Scaffold(
-            appBar: AppBar(title: Text('Kolaborasi')),
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
         final user = userSnapshot.data!;
@@ -38,30 +37,6 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
         ).getUserGroups(user.groups);
 
         return Scaffold(
-          appBar: AppBar(
-            title: Text('Kolaborasi'),
-            actions: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[700],
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CreateGroupScreen(),
-                      ),
-                    );
-                  },
-                  icon: Icon(Icons.add),
-                  label: Text('Buat Kelompok'),
-                ),
-              ),
-            ],
-          ),
           body: StreamBuilder<List<GroupModel>>(
             stream: groupsStream,
             builder: (context, snapshot) {
@@ -99,64 +74,108 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
                 );
               }
 
-              return ListView.builder(
-                itemCount: groups.length,
-                itemBuilder: (context, index) {
-                  GroupModel group = groups[index];
-                  return Card(
-                    margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: ListTile(
-                      title: Text(group.name),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(group.description),
-                          SizedBox(height: 6),
-                          // Progress indicator for group tasks
-                          StreamBuilder<double>(
-                            stream: Provider.of<TaskService>(
-                              context,
-                              listen: false,
-                            ).getGroupProgress(group.id),
-                            builder: (ctx, snap) {
-                              final percent = (snap.hasData)
-                                  ? snap.data!.clamp(0.0, 100.0)
-                                  : 0.0;
-                              return Column(
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 24),
+                    Text(
+                      'Kolaborasi Kelompok',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Kelola anggota kelompok dan diskusi proyek bersama',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                    SizedBox(height: 32),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CreateGroupScreen(),
+                            ),
+                          );
+                        },
+                        icon: Icon(Icons.group_add),
+                        label: Text('Buat Kelompok'),
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: groups.length,
+                        itemBuilder: (context, index) {
+                          final GroupModel group = groups[index];
+                          return Card(
+                            margin: EdgeInsets.symmetric(vertical: 8),
+                            child: ListTile(
+                              title: Text(group.name),
+                              subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  LinearProgressIndicator(
-                                    value: percent / 100.0,
-                                    minHeight: 6,
-                                    backgroundColor: Colors.grey[300],
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    '${percent.toStringAsFixed(0)}% selesai',
-                                    style: TextStyle(fontSize: 12),
+                                  Text(group.description),
+                                  SizedBox(height: 6),
+
+                                  // Progress indicator for group tasks
+                                  StreamBuilder<double>(
+                                    stream: Provider.of<TaskService>(
+                                      context,
+                                      listen: false,
+                                    ).getGroupProgress(group.id),
+                                    builder: (ctx, snap) {
+                                      final percent = (snap.hasData)
+                                          ? snap.data!.clamp(0.0, 100.0)
+                                          : 0.0;
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          LinearProgressIndicator(
+                                            value: percent / 100.0,
+                                            minHeight: 6,
+                                            backgroundColor: Colors.grey[300],
+                                          ),
+                                          SizedBox(height: 4),
+                                          Text(
+                                            '${percent.toStringAsFixed(0)}% selesai',
+                                            style: TextStyle(fontSize: 12),
+                                          ),
+                                        ],
+                                      );
+                                    },
                                   ),
                                 ],
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                      trailing: group.leader == user.uid
-                          ? Chip(
-                              label: Text('Ketua'),
-                              backgroundColor: Colors.blue,
-                            )
-                          : Chip(
-                              label: Text('Anggota'),
-                              backgroundColor: Colors.green,
+                              ),
+                              trailing: group.leader == user.uid
+                                  ? Chip(
+                                      label: Text('Ketua'),
+                                      backgroundColor: Colors.blue,
+                                    )
+                                  : Chip(
+                                      label: Text('Anggota'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                              onTap: () =>
+                                  _showGroupDetail(context, group, user.uid),
                             ),
-                      onTap: () {
-                        _showGroupDetail(context, group, user.uid);
-                      },
+                          );
+                        },
+                      ),
                     ),
-                  );
-                },
+                  ],
+                ),
               );
             },
           ),
@@ -190,11 +209,11 @@ class GroupDetailModal extends StatefulWidget {
   final String currentUid;
 
   const GroupDetailModal({
-    Key? key,
+    super.key,
     required this.parentContext,
     required this.group,
     required this.currentUid,
-  }) : super(key: key);
+  });
 
   @override
   _GroupDetailModalState createState() => _GroupDetailModalState();
@@ -237,11 +256,7 @@ class _GroupDetailModalState extends State<GroupDetailModal> {
   @override
   Widget build(BuildContext context) {
     final group = widget.group;
-
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    // Use a bounded height so internal ListViews have constraints and
-    // avoid Expanded inside an unbounded SingleChildScrollView which can
-    // cause bottom overflow when the keyboard appears.
     final screenHeight = MediaQuery.of(context).size.height;
     final maxModalHeight = screenHeight * 0.9;
 
@@ -262,6 +277,7 @@ class _GroupDetailModalState extends State<GroupDetailModal> {
                 SizedBox(height: 8),
                 Text(group.description),
                 SizedBox(height: 8),
+
                 // Group progress indicator in modal
                 StreamBuilder<double>(
                   stream: Provider.of<TaskService>(
@@ -282,7 +298,7 @@ class _GroupDetailModalState extends State<GroupDetailModal> {
                         ),
                         SizedBox(height: 6),
                         Text(
-                          'Progres kelompok: ${percent.toStringAsFixed(0)}% selesai',
+                          'Progres kelompok: ${percent.toStringAsFixed(0)}% Selesai',
                         ),
                         SizedBox(height: 12),
                       ],
@@ -501,8 +517,9 @@ class _GroupDetailModalState extends State<GroupDetailModal> {
                                               .doc(task.assignedTo)
                                               .snapshots(),
                                           builder: (ctx, asnSnap) {
-                                            if (!asnSnap.hasData)
+                                            if (!asnSnap.hasData) {
                                               return Text('Loading...');
+                                            }
                                             final userMap =
                                                 asnSnap.data!.data()
                                                     as Map<String, dynamic>?;

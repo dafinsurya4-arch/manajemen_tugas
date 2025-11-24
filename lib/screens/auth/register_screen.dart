@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }
@@ -48,8 +50,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
 
       try {
-        _updateDebugInfo('Memanggil AuthService...');
-        
         final authService = Provider.of<AuthService>(context, listen: false);
         final user = await authService.register(
           _fullNameController.text.trim(),
@@ -73,13 +73,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          
+
           // Clear form
           _fullNameController.clear();
           _emailController.clear();
           _passwordController.clear();
           _confirmPasswordController.clear();
-          
+
           // Kembali ke login tab/screen setelah registrasi berhasil
           final tabController = DefaultTabController.maybeOf(context);
           if (tabController != null) {
@@ -91,7 +91,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _updateDebugInfo('Registrasi GAGAL - user null');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Registrasi gagal. Coba dengan email yang berbeda.'),
+              content: Text(
+                'Registrasi gagal. Coba dengan email yang berbeda.',
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -116,8 +118,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           print('SNACKBAR (late): Terjadi kesalahan sistem: $e');
         }
       }
-    } else {
-      _updateDebugInfo('Form tidak valid');
     }
   }
 
@@ -137,26 +137,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   padding: EdgeInsets.all(12),
                   margin: EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    border: Border.all(color: Colors.grey),
+                    color: Colors.white.withOpacity(0.06),
+                    border: Border.all(color: Colors.white24),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     _debugInfo,
-                    style: TextStyle(fontSize: 12, color: Colors.blueGrey),
+                    style: TextStyle(fontSize: 12, color: Colors.white70),
                   ),
                 ),
 
-              SizedBox(height: 5),
-              Text('Silakan daftar untuk membuat akun', style: TextStyle(color: Colors.grey[700]), textAlign: TextAlign.center),
-              SizedBox(height: 25),
+              SizedBox(height: 12),
+              Text(
+                'Silakan daftar untuk membuat akun',
+                style: TextStyle(color: Colors.white),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 18),
               TextFormField(
                 controller: _fullNameController,
+                style: TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Nama Lengkap',
+                  labelStyle: TextStyle(color: Colors.white70),
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
-                  contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white24),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  prefixIcon: Icon(Icons.person, color: Colors.white70),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 12,
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -168,11 +183,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
+                style: TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Email',
+                  labelStyle: TextStyle(color: Colors.white70),
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
-                  contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white24),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  prefixIcon: Icon(Icons.email, color: Colors.white70),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 12,
+                  ),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
@@ -188,23 +214,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
+                style: TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Kata Sandi',
+                  labelStyle: TextStyle(color: Colors.white70),
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white24),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  prefixIcon: Icon(Icons.lock, color: Colors.white70),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureConfirm ? Icons.visibility : Icons.visibility_off,
+                      _obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: Colors.white70,
                     ),
                     onPressed: () {
                       setState(() {
-                        _obscureConfirm = !_obscureConfirm;
+                        _obscurePassword = !_obscurePassword;
                       });
                     },
                   ),
-                  contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 12,
+                  ),
                 ),
-                obscureText: _obscureConfirm,
+                obscureText: _obscurePassword,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Kata Sandi harus diisi';
@@ -218,23 +258,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SizedBox(height: 16),
               TextFormField(
                 controller: _confirmPasswordController,
+                style: TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Konfirmasi Kata Sandi',
+                  labelStyle: TextStyle(color: Colors.white70),
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock_outline),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white24),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  prefixIcon: Icon(Icons.lock_outline, color: Colors.white70),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      _obscureConfirm ? Icons.visibility : Icons.visibility_off,
+                      color: Colors.white70,
                     ),
                     onPressed: () {
                       setState(() {
-                        _obscurePassword = !_obscurePassword;
+                        _obscureConfirm = !_obscureConfirm;
                       });
                     },
                   ),
-                  contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 12,
+                  ),
                 ),
-                obscureText: _obscurePassword,
+                obscureText: _obscureConfirm,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Konfirmasi kata sandi harus diisi';
@@ -242,26 +294,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: 24),
+              SizedBox(height: 20),
               _isLoading
                   ? Column(
                       children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text('Sedang memproses...'),
+                        CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          'Sedang memproses...',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ],
                     )
                   : SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: _register,
-                        child: Text(
-                          'Daftar',
-                          style: TextStyle(fontSize: 16),
-                        ),
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 15),
+                          backgroundColor: const Color(0xFF0D47A1),
+                          foregroundColor: Colors.white,
                         ),
+                        child: Text('Daftar', style: TextStyle(fontSize: 16)),
                       ),
                     ),
               SizedBox(height: 16),

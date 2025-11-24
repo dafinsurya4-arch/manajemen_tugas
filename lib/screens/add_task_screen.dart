@@ -8,6 +8,8 @@ import '../screens/group_picker_screen.dart';
 import '../models/group_model.dart';
 
 class AddTaskScreen extends StatefulWidget {
+  const AddTaskScreen({super.key});
+
   @override
   _AddTaskScreenState createState() => _AddTaskScreenState();
 }
@@ -77,14 +79,15 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         // If collaboration is kelompok, ensure a group was selected and the current user is the group's leader
         if (_collaboration == 'kelompok') {
           if (_selectedGroup == null) {
-            if (mounted)
+            if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Pilih kelompok terlebih dahulu')),
               );
+            }
             return;
           }
           if (currentUserId != _selectedGroup!.leader) {
-            if (mounted)
+            if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
@@ -92,16 +95,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ),
               );
+            }
             return;
           }
         }
 
         await Provider.of<TaskService>(context, listen: false).addTask(task);
 
-        // Show confirmation and navigate back to dashboard. If this screen
-        // was presented as a pushed route, pop it. If not (e.g., it's a
-        // tab), replace the whole route with MainApp to ensure the
-        // dashboard is visible and we don't end up with a blank screen.
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -141,7 +141,20 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       child: Form(
         key: _formKey,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header: title and subtitle above the task form
+            SizedBox(height: 16),
+            Text(
+              'Form Tambah Tugas',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 6),
+            Text(
+              'Lihat, tambah, edit, dan hapus tugas Anda di sini',
+              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+            ),
+            SizedBox(height: 32),
             TextFormField(
               controller: _titleController,
               decoration: InputDecoration(
@@ -250,7 +263,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ],
               ),
             SizedBox(height: 24),
-            ElevatedButton(onPressed: _saveTask, child: Text('Simpan Tugas')),
+            ElevatedButton.icon(
+              onPressed: _saveTask,
+              style: ElevatedButton.styleFrom(foregroundColor: Colors.white),
+              icon: Icon(Icons.assignment_add),
+              label: Text('Simpan Tugas'),
+            ),
           ],
         ),
       ),

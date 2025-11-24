@@ -23,7 +23,6 @@ class AuthService {
 
       print('✅ USER FIREBASE BERHASIL DIBUAT: ${userCredential.user!.uid}');
 
-      // Step 2: Create user data in Firestore
       UserModel user = UserModel(
         uid: userCredential.user!.uid,
         email: email,
@@ -91,7 +90,10 @@ class AuthService {
 
       if (userDoc.exists) {
         print('✅ DATA USER DITEMUKAN DI FIRESTORE');
-        return UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
+
+        final data = userDoc.data() as Map<String, dynamic>;
+
+        return UserModel.fromMap(data);
       } else {
         print('❌ DATA USER TIDAK DITEMUKAN DI FIRESTORE');
         return null;

@@ -7,7 +7,7 @@ import '../models/user_model.dart';
 
 /// Simple screen to let the user pick one of their groups.
 class GroupPickerScreen extends StatelessWidget {
-  const GroupPickerScreen({Key? key}) : super(key: key);
+  const GroupPickerScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,8 +18,9 @@ class GroupPickerScreen extends StatelessWidget {
       body: StreamBuilder<UserModel?>(
         stream: authService.userDataStream,
         builder: (context, userSnap) {
-          if (!userSnap.hasData)
+          if (!userSnap.hasData) {
             return Center(child: CircularProgressIndicator());
+          }
           final user = userSnap.data!;
 
           return StreamBuilder<List<GroupModel>>(
@@ -28,13 +29,15 @@ class GroupPickerScreen extends StatelessWidget {
               listen: false,
             ).getUserGroups(user.groups),
             builder: (context, snap) {
-              if (!snap.hasData)
+              if (!snap.hasData) {
                 return Center(child: CircularProgressIndicator());
+              }
               final groups = snap.data!;
-              if (groups.isEmpty)
+              if (groups.isEmpty) {
                 return Center(
                   child: Text('Anda tidak tergabung di kelompok manapun'),
                 );
+              }
 
               return ListView.builder(
                 itemCount: groups.length,

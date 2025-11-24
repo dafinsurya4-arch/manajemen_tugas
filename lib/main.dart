@@ -20,6 +20,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -32,13 +34,24 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'EduTrack',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          // Use a blue-dark / blue-light color pair as requested.
+          primaryColor: const Color(0xFF0D47A1), // dark blue
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF0D47A1),
+            primary: const Color(0xFF64B5F6),
+            secondary: const Color(0xFF64B5F6),
+          ),
+          appBarTheme: AppBarTheme(backgroundColor: const Color(0xFF0D47A1)),
+          floatingActionButtonTheme: FloatingActionButtonThemeData(
+            backgroundColor: const Color(0xFF0D47A1),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0D47A1),
+            ),
+          ),
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        // Always show the SplashLauncher on cold app start. AuthWrapper
-        // should not display the splashscreen during auth state waits or
-        // during login transitions — we'll show a lightweight loading UI
-        // instead when auth stream / user lookups are pending.
         home: SplashLauncher(),
         debugShowCheckedModeBanner: false,
       ),
@@ -47,6 +60,8 @@ class MyApp extends StatelessWidget {
 }
 
 class SplashLauncher extends StatefulWidget {
+  const SplashLauncher({super.key});
+
   @override
   _SplashLauncherState createState() => _SplashLauncherState();
 }
@@ -59,11 +74,16 @@ class _SplashLauncherState extends State<SplashLauncher> {
   }
 
   void _start() async {
-    // Show splash for 2 seconds, then navigate to the auth wrapper.
-    await Future.delayed(Duration(seconds: 2));
+    await Future.delayed(const Duration(milliseconds: 1500));
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => AuthWrapper()),
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => AuthWrapper(),
+        transitionDuration: const Duration(milliseconds: 300),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
     );
   }
 
@@ -74,6 +94,8 @@ class _SplashLauncherState extends State<SplashLauncher> {
 }
 
 class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context, listen: false);
@@ -84,11 +106,9 @@ class AuthWrapper extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // Avoid re-showing the splash while the auth stream warms up
           // after login/changes. Use a small loading indicator instead.
-          return Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return Scaffold(body: Center(child: CircularProgressIndicator()));
         }
-        
+
         if (snapshot.hasData && snapshot.data != null) {
           return FutureBuilder<UserModel?>(
             future: _getUserData(authService, snapshot.data!.uid),
@@ -100,16 +120,16 @@ class AuthWrapper extends StatelessWidget {
                   body: Center(child: CircularProgressIndicator()),
                 );
               }
-              
+
               if (userSnapshot.hasData && userSnapshot.data != null) {
                 return MainApp();
               }
-              
+
               return LoginScreen();
             },
           );
         }
-        
+
         return LoginScreen();
       },
     );
@@ -117,7 +137,10 @@ class AuthWrapper extends StatelessWidget {
 
   Future<UserModel?> _getUserData(AuthService authService, String uid) async {
     try {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
       if (userDoc.exists) {
         return UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
       }

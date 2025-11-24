@@ -5,6 +5,8 @@ import '../models/group_model.dart';
 import '../services/auth_service.dart';
 
 class CreateGroupScreen extends StatefulWidget {
+  const CreateGroupScreen({super.key});
+
   @override
   _CreateGroupScreenState createState() => _CreateGroupScreenState();
 }
@@ -50,7 +52,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Buat Kelompok Baru')),
+      appBar: AppBar(
+        title: Text('Buat Kelompok Baru'),
+        foregroundColor: Colors.white,
+      ),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Form(
@@ -83,6 +88,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               ElevatedButton(
                 onPressed: _createGroup,
                 child: Text('Buat Kelompok'),
+                style: ElevatedButton.styleFrom(foregroundColor: Colors.white),
               ),
             ],
           ),

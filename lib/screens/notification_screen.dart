@@ -7,6 +7,8 @@ import '../models/notification_model.dart';
 import '../models/user_model.dart';
 
 class NotificationScreen extends StatelessWidget {
+  const NotificationScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context, listen: false);
@@ -25,10 +27,12 @@ class NotificationScreen extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
+            foregroundColor: Colors.white,
             title: Text('Notifikasi'),
             actions: [
               IconButton(
                 icon: Icon(Icons.mark_email_read),
+                color: Colors.white,
                 onPressed: () {
                   Provider.of<NotificationService>(
                     context,
