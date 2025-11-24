@@ -107,7 +107,41 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
                     margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: ListTile(
                       title: Text(group.name),
-                      subtitle: Text(group.description),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(group.description),
+                          SizedBox(height: 6),
+                          // Progress indicator for group tasks
+                          StreamBuilder<double>(
+                            stream: Provider.of<TaskService>(
+                              context,
+                              listen: false,
+                            ).getGroupProgress(group.id),
+                            builder: (ctx, snap) {
+                              final percent = (snap.hasData)
+                                  ? snap.data!.clamp(0.0, 100.0)
+                                  : 0.0;
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  LinearProgressIndicator(
+                                    value: percent / 100.0,
+                                    minHeight: 6,
+                                    backgroundColor: Colors.grey[300],
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    '${percent.toStringAsFixed(0)}% selesai',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                       trailing: group.leader == user.uid
                           ? Chip(
                               label: Text('Ketua'),
@@ -205,16 +239,19 @@ class _GroupDetailModalState extends State<GroupDetailModal> {
     final group = widget.group;
 
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    // Use a bounded height so internal ListViews have constraints and
+    // avoid Expanded inside an unbounded SingleChildScrollView which can
+    // cause bottom overflow when the keyboard appears.
+    final screenHeight = MediaQuery.of(context).size.height;
+    final maxModalHeight = screenHeight * 0.9;
 
     return SafeArea(
-      child: SingleChildScrollView(
+      child: Padding(
         padding: EdgeInsets.only(bottom: bottomInset),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.9,
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(16),
+        child: Container(
+          height: maxModalHeight,
+          padding: EdgeInsets.all(16),
+          child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -224,12 +261,43 @@ class _GroupDetailModalState extends State<GroupDetailModal> {
                 ),
                 SizedBox(height: 8),
                 Text(group.description),
+                SizedBox(height: 8),
+                // Group progress indicator in modal
+                StreamBuilder<double>(
+                  stream: Provider.of<TaskService>(
+                    widget.parentContext,
+                    listen: false,
+                  ).getGroupProgress(group.id),
+                  builder: (context, snap) {
+                    final percent = (snap.hasData)
+                        ? snap.data!.clamp(0.0, 100.0)
+                        : 0.0;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        LinearProgressIndicator(
+                          value: percent / 100.0,
+                          minHeight: 8,
+                          backgroundColor: Colors.grey[300],
+                        ),
+                        SizedBox(height: 6),
+                        Text(
+                          'Progres kelompok: ${percent.toStringAsFixed(0)}% selesai',
+                        ),
+                        SizedBox(height: 12),
+                      ],
+                    );
+                  },
+                ),
                 SizedBox(height: 16),
                 Text(
                   'Anggota Kelompok:',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                Expanded(
+
+                // Members list - fixed height with scroll
+                SizedBox(
+                  height: 150,
                   child: ListView.builder(
                     itemCount: group.members.length,
                     itemBuilder: (context, index) {
@@ -302,183 +370,194 @@ class _GroupDetailModalState extends State<GroupDetailModal> {
                     },
                   ),
                 ),
+
                 SizedBox(height: 12),
                 Text(
                   'Tugas Kelompok:',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 8),
-                // List group tasks
-                StreamBuilder<List<TaskModel>>(
-                  stream: Provider.of<TaskService>(
-                    widget.parentContext,
-                    listen: false,
-                  ).getGroupTasks(group.id),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return Center(child: CircularProgressIndicator());
-                    }
-                    final tasks = snapshot.data!;
-                    if (tasks.isEmpty) {
-                      return Text('Belum ada tugas.');
-                    }
-                    return Column(
-                      children: tasks.map((task) {
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 6),
-                          child: ListTile(
-                            title: Text(task.title),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(task.description),
-                                Row(
-                                  children: [
-                                    Container(
-                                      margin: EdgeInsets.symmetric(vertical: 4),
-                                      child: Chip(
-                                        label: Text(
-                                          task.status == 'tertunda'
-                                              ? 'Tertunda'
-                                              : task.status == 'progres'
-                                              ? 'Dalam Progres'
-                                              : 'Selesai',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                          ),
+
+                // Tasks list - fixed height with scroll
+                SizedBox(
+                  height: 250,
+                  child: StreamBuilder<List<TaskModel>>(
+                    stream: Provider.of<TaskService>(
+                      widget.parentContext,
+                      listen: false,
+                    ).getGroupTasks(group.id),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+                      final tasks = snapshot.data!;
+                      if (tasks.isEmpty) {
+                        return Center(child: Text('Belum ada tugas.'));
+                      }
+                      return ListView.builder(
+                        itemCount: tasks.length,
+                        itemBuilder: (context, tIndex) {
+                          final task = tasks[tIndex];
+                          return Card(
+                            margin: EdgeInsets.symmetric(vertical: 6),
+                            child: ListTile(
+                              title: Text(task.title),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(task.description),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        margin: EdgeInsets.symmetric(
+                                          vertical: 4,
                                         ),
-                                        backgroundColor:
+                                        child: Chip(
+                                          label: Text(
                                             task.status == 'tertunda'
-                                            ? Colors.orange
-                                            : task.status == 'progres'
-                                            ? Colors.blue
-                                            : Colors.green,
-                                      ),
-                                    ),
-                                    if (task.assignedTo == widget.currentUid)
-                                      PopupMenuButton<String>(
-                                        icon: Icon(Icons.more_vert, size: 20),
-                                        onSelected: (String newStatus) async {
-                                          try {
-                                            await Provider.of<TaskService>(
-                                              widget.parentContext,
-                                              listen: false,
-                                            ).updateTaskStatus(
-                                              task.id,
-                                              newStatus,
-                                            );
-                                            if (!mounted) return;
-                                            ScaffoldMessenger.of(
-                                              widget.parentContext,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'Status tugas diperbarui',
-                                                ),
-                                              ),
-                                            );
-                                          } catch (e) {
-                                            if (!mounted) return;
-                                            ScaffoldMessenger.of(
-                                              widget.parentContext,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'Gagal memperbarui status: $e',
-                                                ),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                        itemBuilder: (context) => [
-                                          PopupMenuItem(
-                                            value: 'tertunda',
-                                            child: Text('Tertunda'),
-                                            enabled: task.status != 'tertunda',
-                                          ),
-                                          PopupMenuItem(
-                                            value: 'progres',
-                                            child: Text('Dalam Progres'),
-                                            enabled: task.status != 'progres',
-                                          ),
-                                          PopupMenuItem(
-                                            value: 'selesai',
-                                            child: Text('Selesai'),
-                                            enabled: task.status != 'selesai',
-                                          ),
-                                        ],
-                                      ),
-                                  ],
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Deadline: ${DateFormat('dd/MM/yyyy').format(task.deadline)}',
-                                ),
-                                SizedBox(height: 4),
-                                task.assignedTo == null
-                                    ? Text('Belum diambil')
-                                    : StreamBuilder<DocumentSnapshot>(
-                                        stream: FirebaseFirestore.instance
-                                            .collection('users')
-                                            .doc(task.assignedTo)
-                                            .snapshots(),
-                                        builder: (ctx, asnSnap) {
-                                          if (!asnSnap.hasData)
-                                            return Text('Loading...');
-                                          final userMap =
-                                              asnSnap.data!.data()
-                                                  as Map<String, dynamic>?;
-                                          final name =
-                                              userMap?['fullName'] as String? ??
-                                              'Unknown';
-                                          return Text('Diambil oleh: $name');
-                                        },
-                                      ),
-                              ],
-                            ),
-                            trailing:
-                                task.assignedTo == null &&
-                                    group.members.contains(widget.currentUid)
-                                ? ElevatedButton(
-                                    child: Text('Ambil'),
-                                    onPressed: () async {
-                                      try {
-                                        await Provider.of<TaskService>(
-                                          widget.parentContext,
-                                          listen: false,
-                                        ).updateTaskAssignment(
-                                          task.id,
-                                          widget.currentUid,
-                                        );
-                                        if (!mounted) return;
-                                        ScaffoldMessenger.of(
-                                          widget.parentContext,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text('Tugas diambil'),
-                                          ),
-                                        );
-                                      } catch (e) {
-                                        if (!mounted) return;
-                                        ScaffoldMessenger.of(
-                                          widget.parentContext,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'Gagal mengambil tugas: $e',
+                                                ? 'Tertunda'
+                                                : task.status == 'progres'
+                                                ? 'Dalam Progres'
+                                                : 'Selesai',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
                                             ),
                                           ),
-                                        );
-                                      }
-                                    },
-                                  )
-                                : null,
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  },
+                                          backgroundColor:
+                                              task.status == 'tertunda'
+                                              ? Colors.orange
+                                              : task.status == 'progres'
+                                              ? Colors.blue
+                                              : Colors.green,
+                                        ),
+                                      ),
+                                      if (task.assignedTo == widget.currentUid)
+                                        PopupMenuButton<String>(
+                                          icon: Icon(Icons.more_vert, size: 20),
+                                          onSelected: (String newStatus) async {
+                                            try {
+                                              await Provider.of<TaskService>(
+                                                widget.parentContext,
+                                                listen: false,
+                                              ).updateTaskStatus(
+                                                task.id,
+                                                newStatus,
+                                              );
+                                              if (!mounted) return;
+                                              ScaffoldMessenger.of(
+                                                widget.parentContext,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    'Status tugas diperbarui',
+                                                  ),
+                                                ),
+                                              );
+                                            } catch (e) {
+                                              if (!mounted) return;
+                                              ScaffoldMessenger.of(
+                                                widget.parentContext,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    'Gagal memperbarui status: $e',
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          itemBuilder: (context) => [
+                                            PopupMenuItem(
+                                              value: 'tertunda',
+                                              child: Text('Tertunda'),
+                                              enabled:
+                                                  task.status != 'tertunda',
+                                            ),
+                                            PopupMenuItem(
+                                              value: 'progres',
+                                              child: Text('Dalam Progres'),
+                                              enabled: task.status != 'progres',
+                                            ),
+                                            PopupMenuItem(
+                                              value: 'selesai',
+                                              child: Text('Selesai'),
+                                              enabled: task.status != 'selesai',
+                                            ),
+                                          ],
+                                        ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'Deadline: ${DateFormat('dd/MM/yyyy').format(task.deadline)}',
+                                  ),
+                                  SizedBox(height: 4),
+                                  task.assignedTo == null
+                                      ? Text('Belum diambil')
+                                      : StreamBuilder<DocumentSnapshot>(
+                                          stream: FirebaseFirestore.instance
+                                              .collection('users')
+                                              .doc(task.assignedTo)
+                                              .snapshots(),
+                                          builder: (ctx, asnSnap) {
+                                            if (!asnSnap.hasData)
+                                              return Text('Loading...');
+                                            final userMap =
+                                                asnSnap.data!.data()
+                                                    as Map<String, dynamic>?;
+                                            final name =
+                                                userMap?['fullName']
+                                                    as String? ??
+                                                'Unknown';
+                                            return Text('Diambil oleh: $name');
+                                          },
+                                        ),
+                                ],
+                              ),
+                              trailing:
+                                  task.assignedTo == null &&
+                                      group.members.contains(widget.currentUid)
+                                  ? ElevatedButton(
+                                      child: Text('Ambil'),
+                                      onPressed: () async {
+                                        try {
+                                          await Provider.of<TaskService>(
+                                            widget.parentContext,
+                                            listen: false,
+                                          ).updateTaskAssignment(
+                                            task.id,
+                                            widget.currentUid,
+                                          );
+                                          if (!mounted) return;
+                                          ScaffoldMessenger.of(
+                                            widget.parentContext,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Tugas diambil'),
+                                            ),
+                                          );
+                                        } catch (e) {
+                                          if (!mounted) return;
+                                          ScaffoldMessenger.of(
+                                            widget.parentContext,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                'Gagal mengambil tugas: $e',
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    )
+                                  : null,
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
                 SizedBox(height: 12),
                 if (group.leader == widget.currentUid)

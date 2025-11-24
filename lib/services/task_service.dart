@@ -58,6 +58,23 @@ class TaskService {
         });
   }
 
+  /// Returns a stream of percentage (0.0 - 100.0) representing
+  /// how many tasks in the group are completed.
+  Stream<double> getGroupProgress(String groupId) {
+    return _firestore
+        .collection('tasks')
+        .where('groupId', isEqualTo: groupId)
+        .snapshots()
+        .map((snapshot) {
+          final total = snapshot.docs.length;
+          if (total == 0) return 0.0;
+          final completed = snapshot.docs
+              .where((doc) => (doc.data()['status'] ?? '') == 'selesai')
+              .length;
+          return (completed / total) * 100.0;
+        });
+  }
+
   /// Stream that merges personal tasks (owned by user) and tasks assigned to the user.
   /// Emits a de-duplicated list ordered by deadline.
   Stream<List<TaskModel>> getRelevantTasks(String userId) {
