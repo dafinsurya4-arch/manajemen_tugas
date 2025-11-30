@@ -132,9 +132,10 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
       appBar: AppBar(
         title: RichText(
           text: TextSpan(
-            style: TextStyle(
-              color: const Color.fromARGB(255, 255, 255, 255),
+            style: const TextStyle(
+              color: Color.fromARGB(255, 255, 255, 255),
               fontSize: 20,
+              fontFamily: 'Product Sans',
             ),
             children: [
               TextSpan(

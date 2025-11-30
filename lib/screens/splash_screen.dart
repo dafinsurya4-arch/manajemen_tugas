@@ -20,9 +20,6 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   _navigateToNext() {
-    // Shorten the visible time and animation durations to avoid long-running
-    // animations that may overlap navigation and cause jank on some devices.
-    // Start fade-out after ~1600ms so a 600ms fade completes before navigation.
     Future.delayed(const Duration(milliseconds: 1600), () {
       if (mounted) setState(() => _showContent = false);
     });
@@ -82,6 +79,7 @@ class _SplashScreenState extends State<SplashScreen> {
                             fontSize: 32,
                             color: Colors.white,
                             fontWeight: FontWeight.normal,
+                            fontFamily: 'Product Sans',
                           ),
                         ),
                         TextSpan(
@@ -90,6 +88,7 @@ class _SplashScreenState extends State<SplashScreen> {
                             fontSize: 32,
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
+                            fontFamily: 'Product Sans',
                           ),
                         ),
                       ],

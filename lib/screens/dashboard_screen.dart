@@ -57,10 +57,6 @@ class _DashboardScreenState extends State<DashboardScreen>
         listen: false,
       ).getGroupsForUser(currentUserId);
 
-      // Prefer the first non-empty emission from each stream so we don't
-      // accidentally cache an empty snapshot (which causes group tasks to
-      // appear missing). Fall back to the immediate first emission if the
-      // non-empty emission doesn't arrive within a short timeout.
       List<TaskModel> firstTasks;
       try {
         firstTasks = await taskStream

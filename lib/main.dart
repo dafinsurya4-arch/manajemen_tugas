@@ -41,9 +41,9 @@ class MyApp extends StatelessWidget {
             primary: const Color(0xFF64B5F6),
             secondary: const Color(0xFF64B5F6),
           ),
-          appBarTheme: AppBarTheme(backgroundColor: const Color(0xFF0D47A1)),
-          floatingActionButtonTheme: FloatingActionButtonThemeData(
-            backgroundColor: const Color(0xFF0D47A1),
+          appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF0D47A1)),
+          floatingActionButtonTheme: const FloatingActionButtonThemeData(
+            backgroundColor: Color(0xFF0D47A1),
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
@@ -51,6 +51,48 @@ class MyApp extends StatelessWidget {
             ),
           ),
           visualDensity: VisualDensity.adaptivePlatformDensity,
+          fontFamily: 'Product Sans',
+          // Unified text theme to ensure all text uses the bundled font
+          textTheme: const TextTheme(
+            displayLarge: TextStyle(
+              fontSize: 32.0,
+              fontWeight: FontWeight.w700,
+            ),
+            displayMedium: TextStyle(
+              fontSize: 28.0,
+              fontWeight: FontWeight.w600,
+            ),
+            displaySmall: TextStyle(
+              fontSize: 24.0,
+              fontWeight: FontWeight.w600,
+            ),
+            headlineLarge: TextStyle(
+              fontSize: 22.0,
+              fontWeight: FontWeight.w600,
+            ),
+            headlineMedium: TextStyle(
+              fontSize: 20.0,
+              fontWeight: FontWeight.w600,
+            ),
+            headlineSmall: TextStyle(
+              fontSize: 18.0,
+              fontWeight: FontWeight.w600,
+            ),
+            titleLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w600),
+            titleMedium: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w500),
+            titleSmall: TextStyle(fontSize: 13.0, fontWeight: FontWeight.w500),
+            bodyLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w400),
+            bodyMedium: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w400),
+            bodySmall: TextStyle(fontSize: 12.0, fontWeight: FontWeight.w400),
+            labelLarge: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w600),
+            labelMedium: TextStyle(fontSize: 12.0, fontWeight: FontWeight.w500),
+            labelSmall: TextStyle(fontSize: 10.0, fontWeight: FontWeight.w500),
+          ),
+          primaryTextTheme: const TextTheme(
+            titleLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w600),
+            titleMedium: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w500),
+            bodyLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w400),
+          ),
         ),
         home: SplashLauncher(),
         debugShowCheckedModeBanner: false,

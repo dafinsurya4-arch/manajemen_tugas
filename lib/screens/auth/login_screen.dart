@@ -159,7 +159,11 @@ class _LoginScreenState extends State<LoginScreen>
                         SizedBox(height: 40),
                         RichText(
                           text: TextSpan(
-                            style: TextStyle(color: Colors.white, fontSize: 36),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 36,
+                              fontFamily: 'Product Sans',
+                            ),
                             children: [
                               TextSpan(
                                 text: 'Edu',

@@ -25,3 +25,30 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Product Sans
+      fonts:
+        - asset: assets/fonts/ProductSans-Black.ttf
+          weight: 900
+        - asset: assets/fonts/ProductSans-BlackItalic.ttf
+          weight: 700
+        - asset: assets/fonts/ProductSans-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/ProductSans-BoldItalic.ttf
+          weight: 600
+        - asset: assets/fonts/ProductSans-Italic.ttf
+          weight: 400
+        - asset: assets/fonts/ProductSans-Light.ttf
+          weight: 300
+        - asset: assets/fonts/ProductSans-LightItalic.ttf
+          weight: 200
+        - asset: assets/fonts/ProductSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/ProductSans-MediumItalic.ttf
+          weight: 400
+        - asset: assets/fonts/ProductSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/ProductSans-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/ProductSans-ThinItalic.ttf
+          weight: 100
