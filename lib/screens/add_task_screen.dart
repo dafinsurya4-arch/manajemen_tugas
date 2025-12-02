@@ -4,8 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/task_service.dart';
 import '../models/task_model.dart';
 import 'main_app.dart';
-import '../screens/group_picker_screen.dart';
-import '../models/group_model.dart';
+// Collaboration/group selection removed: tasks created here will always be 'individu'
 
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
@@ -19,10 +18,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _deadlineController = TextEditingController();
-  GroupModel? _selectedGroup;
-
   String _status = 'tertunda';
-  String _collaboration = 'individu';
+  // Collaboration fixed to 'individu' for this screen
   DateTime? _selectedDate;
 
   Future<void> _selectDate(BuildContext context) async {
@@ -49,9 +46,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         description: _descriptionController.text,
         deadline: _selectedDate!,
         status: _status,
-        collaboration: _collaboration,
+        collaboration: 'individu',
         userId: 'current_user_id', // Ganti dengan user ID
-        groupId: _selectedGroup?.id,
+        groupId: null,
         assignedTo: null,
         createdBy: 'current_user_id', // Ganti dengan user ID
         createdAt: DateTime.now(),
@@ -76,29 +73,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           );
         }
 
-        // If collaboration is kelompok, ensure a group was selected and the current user is the group's leader
-        if (_collaboration == 'kelompok') {
-          if (_selectedGroup == null) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Pilih kelompok terlebih dahulu')),
-              );
-            }
-            return;
-          }
-          if (currentUserId != _selectedGroup!.leader) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Hanya ketua kelompok yang dapat menambahkan tugas kelompok',
-                  ),
-                ),
-              );
-            }
-            return;
-          }
-        }
+        // This screen only allows individual tasks, so no group validation performed
 
         await Provider.of<TaskService>(context, listen: false).addTask(task);
 
@@ -151,7 +126,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             ),
             SizedBox(height: 6),
             Text(
-              'Lihat, tambah, edit, dan hapus tugas Anda di sini',
+              'Tambah, dan simpan tugas Anda di sini',
               style: TextStyle(fontSize: 14, color: Colors.grey[700]),
             ),
             SizedBox(height: 32),
@@ -218,50 +193,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               },
             ),
             SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _collaboration,
-              decoration: InputDecoration(
-                labelText: 'Kolaborasi',
-                border: OutlineInputBorder(),
-              ),
-              items: [
-                DropdownMenuItem(value: 'individu', child: Text('Individu')),
-                DropdownMenuItem(value: 'kelompok', child: Text('Kelompok')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _collaboration = value!;
-                });
-              },
-            ),
-            SizedBox(height: 12),
-            if (_collaboration == 'kelompok')
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        final selected = await Navigator.push<GroupModel?>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => GroupPickerScreen(),
-                          ),
-                        );
-                        if (selected != null) {
-                          setState(() {
-                            _selectedGroup = selected;
-                          });
-                        }
-                      },
-                      child: Text(
-                        _selectedGroup == null
-                            ? 'Pilih Kelompok'
-                            : 'Kelompok: ${_selectedGroup!.name}',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: _saveTask,

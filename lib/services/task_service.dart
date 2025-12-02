@@ -58,6 +58,64 @@ class TaskService {
         });
   }
 
+  /// Returns a Stream that emits a Map of task statistics for the `userId`.
+  /// It merges the personal and assigned tasks streams and recomputes counts each time either stream changes.
+  Stream<Map<String, int>> getTaskStatisticsStream(String userId) {
+    final personal = _firestore
+        .collection('tasks')
+        .where('userId', isEqualTo: userId)
+        .where('collaboration', isEqualTo: 'individu')
+        .snapshots()
+        .map(
+          (snap) => snap.docs.map((d) => TaskModel.fromMap(d.data())).toList(),
+        );
+
+    final assigned = _firestore
+        .collection('tasks')
+        .where('assignedTo', isEqualTo: userId)
+        .snapshots()
+        .map(
+          (snap) => snap.docs.map((d) => TaskModel.fromMap(d.data())).toList(),
+        );
+
+    final controller = StreamController<Map<String, int>>.broadcast();
+    List<TaskModel> lastPersonal = [];
+    List<TaskModel> lastAssigned = [];
+
+    void emitStats() {
+      final Map<String, TaskModel> map = {};
+      for (var t in lastPersonal) map[t.id] = t;
+      for (var t in lastAssigned) map[t.id] = t;
+      final all = map.values.toList();
+      final completed = all.where((t) => t.status == 'selesai').length;
+      final inProgress = all.where((t) => t.status == 'progres').length;
+      final pending = all.where((t) => t.status == 'tertunda').length;
+      controller.add({
+        'completed': completed,
+        'inProgress': inProgress,
+        'pending': pending,
+      });
+    }
+
+    final sub1 = personal.listen((list) {
+      lastPersonal = list;
+      emitStats();
+    }, onError: (e) => controller.addError(e));
+
+    final sub2 = assigned.listen((list) {
+      lastAssigned = list;
+      emitStats();
+    }, onError: (e) => controller.addError(e));
+
+    controller.onCancel = () async {
+      await sub1.cancel();
+      await sub2.cancel();
+      await controller.close();
+    };
+
+    return controller.stream;
+  }
+
   /// Returns a stream of percentage (0.0 - 100.0) representing
   /// how many tasks in the group are completed.
   Stream<double> getGroupProgress(String groupId) {
@@ -159,6 +217,10 @@ class TaskService {
 
   Future<void> addTask(TaskModel task) async {
     await _firestore.collection('tasks').doc(task.id).set(task.toMap());
+  }
+
+  Future<void> updateTask(TaskModel task) async {
+    await _firestore.collection('tasks').doc(task.id).update(task.toMap());
   }
 
   Future<void> updateTaskStatus(String taskId, String status) async {

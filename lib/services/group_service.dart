@@ -96,7 +96,11 @@ class GroupService {
     await _firestore.collection('notifications').doc(notificationId).delete();
   }
 
-  Future<void> removeMember(String groupId, String userId) async {
+  Future<void> removeMember(
+    String groupId,
+    String userId, {
+    bool deleteAssignedTasks = false,
+  }) async {
     await _firestore.collection('groups').doc(groupId).update({
       'members': FieldValue.arrayRemove([userId]),
     });
@@ -104,9 +108,39 @@ class GroupService {
     await _firestore.collection('users').doc(userId).update({
       'groups': FieldValue.arrayRemove([groupId]),
     });
+    // Unassign or delete tasks that were assigned to the user in this group depending on `deleteAssignedTasks` flag.
+    // - If `deleteAssignedTasks == false` (default): set `assignedTo` to null and `status` to 'tertunda'.
+    // - If `deleteAssignedTasks == true`: delete the task documents entirely.
+    try {
+      final tasksSnapshot = await _firestore
+          .collection('tasks')
+          .where('groupId', isEqualTo: groupId)
+          .where('assignedTo', isEqualTo: userId)
+          .get();
+      if (tasksSnapshot.docs.isNotEmpty) {
+        final batch = _firestore.batch();
+        for (var doc in tasksSnapshot.docs) {
+          if (deleteAssignedTasks) {
+            batch.delete(doc.reference);
+          } else {
+            batch.update(doc.reference, {
+              'assignedTo': null,
+              'status': 'tertunda',
+            });
+          }
+        }
+        await batch.commit();
+      }
+    } catch (e) {
+      print('Error unassigning tasks after removeMember: $e');
+    }
   }
 
-  Future<void> leaveGroup(String groupId, String userId) async {
+  Future<void> leaveGroup(
+    String groupId,
+    String userId, {
+    bool deleteAssignedTasks = false,
+  }) async {
     await _firestore.collection('groups').doc(groupId).update({
       'members': FieldValue.arrayRemove([userId]),
     });
@@ -114,6 +148,30 @@ class GroupService {
     await _firestore.collection('users').doc(userId).update({
       'groups': FieldValue.arrayRemove([groupId]),
     });
+    // Unassign tasks assigned to this user within the group, revert status to tertunda.
+    try {
+      final tasksSnapshot = await _firestore
+          .collection('tasks')
+          .where('groupId', isEqualTo: groupId)
+          .where('assignedTo', isEqualTo: userId)
+          .get();
+      if (tasksSnapshot.docs.isNotEmpty) {
+        final batch = _firestore.batch();
+        for (var doc in tasksSnapshot.docs) {
+          if (deleteAssignedTasks) {
+            batch.delete(doc.reference);
+          } else {
+            batch.update(doc.reference, {
+              'assignedTo': null,
+              'status': 'tertunda',
+            });
+          }
+        }
+        await batch.commit();
+      }
+    } catch (e) {
+      print('Error unassigning tasks on leaveGroup: $e');
+    }
   }
 
   /// Stream groups where the given user is a member.
@@ -122,8 +180,10 @@ class GroupService {
         .collection('groups')
         .where('members', arrayContains: userId)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => GroupModel.fromMap(doc.data()))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => GroupModel.fromMap(doc.data()))
+              .toList(),
+        );
   }
 }

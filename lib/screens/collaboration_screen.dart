@@ -123,6 +123,7 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
                 children: [
                   header,
                   actionsRow,
+                  SizedBox(height: 16),
                   Expanded(
                     child: groups.isEmpty
                         ? Center(
@@ -137,21 +138,6 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
                                   ),
-                                ),
-                                SizedBox(height: 12),
-                                ElevatedButton.icon(
-                                  icon: Icon(Icons.group_add),
-                                  label: Text('Buat Kelompok'),
-                                  style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                  ),
-                                  onPressed: () async {
-                                    await Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => CreateGroupScreen(),
-                                      ),
-                                    );
-                                  },
                                 ),
                               ],
                             ),
@@ -569,7 +555,7 @@ class _GroupDetailModalState extends State<GroupDetailModal>
                 ),
               ),
 
-              // toolbar
+              // toolbar with action buttons
               Container(
                 padding: EdgeInsets.symmetric(vertical: 8),
                 alignment: Alignment.centerRight,
@@ -577,28 +563,28 @@ class _GroupDetailModalState extends State<GroupDetailModal>
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton.icon(
-                      icon: Icon(
-                        _showInvitePanel ? Icons.close : Icons.person_add,
-                      ),
-                      label: Text(_showInvitePanel ? 'Tutup' : 'Undang'),
-                      onPressed: () {
-                        setState(() {
-                          _showInvitePanel = !_showInvitePanel;
-                          if (_showInvitePanel) _showAddTaskPanel = false;
-                        });
-                      },
-                    ),
-                    SizedBox(width: 8),
-                    TextButton.icon(
-                      icon: Icon(_showAddTaskPanel ? Icons.close : Icons.add),
-                      label: Text(_showAddTaskPanel ? 'Tutup' : 'Tambah Tugas'),
                       onPressed: () {
                         setState(() {
                           _showAddTaskPanel = !_showAddTaskPanel;
                           if (_showAddTaskPanel) _showInvitePanel = false;
                         });
                       },
+                      icon: Icon(Icons.assignment_add),
+                      label: Text('Tambah Tugas'),
                     ),
+                    if (widget.group.leader == widget.currentUid) ...[
+                      SizedBox(width: 8),
+                      TextButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _showInvitePanel = !_showInvitePanel;
+                            if (_showInvitePanel) _showAddTaskPanel = false;
+                          });
+                        },
+                        icon: Icon(Icons.person_add),
+                        label: Text('Undang Anggota'),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -700,35 +686,99 @@ class _GroupDetailModalState extends State<GroupDetailModal>
                             style: TextStyle(color: Colors.grey[700]),
                           ),
                           trailing:
-                              widget.group.leader == widget.currentUid &&
-                                  memberId != widget.currentUid
+                              (widget.group.leader == widget.currentUid &&
+                                  memberId != widget.currentUid)
                               ? IconButton(
                                   icon: Icon(
                                     Icons.remove_circle,
                                     color: Colors.red,
                                   ),
-                                  onPressed: () {
-                                    Provider.of<GroupService>(
-                                      widget.parentContext,
-                                      listen: false,
-                                    ).removeMember(group.id, memberId);
-                                    setState(
-                                      () => group.members.removeAt(index),
+                                  onPressed: () async {
+                                    final confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: Text('Keluarkan anggota'),
+                                        content: Text(
+                                          'Anggota akan dikeluarkan dari kelompok. Semua tugas kelompok yang diambil anggota ini akan dikembalikan menjadi belum diambil (unassigned). Lanjutkan?',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx, false),
+                                            child: Text('Batal'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx, true),
+                                            child: Text('Keluarkan'),
+                                          ),
+                                        ],
+                                      ),
                                     );
+                                    if (confirmed == true) {
+                                      await Provider.of<GroupService>(
+                                        widget.parentContext,
+                                        listen: false,
+                                      ).removeMember(group.id, memberId);
+                                      setState(
+                                        () => group.members.removeAt(index),
+                                      );
+                                      ScaffoldMessenger.of(
+                                        widget.parentContext,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Anggota dikeluarkan dan tugas yang diambil dikembalikan',
+                                          ),
+                                        ),
+                                      );
+                                    }
                                   },
                                 )
-                              : memberId == widget.currentUid
+                              : (memberId == widget.currentUid)
                               ? IconButton(
                                   icon: Icon(
                                     Icons.exit_to_app,
                                     color: Colors.orange,
                                   ),
-                                  onPressed: () {
-                                    Provider.of<GroupService>(
-                                      widget.parentContext,
-                                      listen: false,
-                                    ).leaveGroup(group.id, memberId);
-                                    Navigator.of(context).pop();
+                                  onPressed: () async {
+                                    final confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: Text('Keluar dari kelompok'),
+                                        content: Text(
+                                          'Anda akan keluar dari kelompok. Semua tugas kelompok yang telah Anda ambil akan dikembalikan menjadi belum diambil (unassigned). Lanjutkan?',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx, false),
+                                            child: Text('Batal'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx, true),
+                                            child: Text('Keluar'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirmed == true) {
+                                      await Provider.of<GroupService>(
+                                        widget.parentContext,
+                                        listen: false,
+                                      ).leaveGroup(group.id, memberId);
+                                      ScaffoldMessenger.of(
+                                        widget.parentContext,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Anda keluar dari kelompok. Tugas yang Anda ambil dikembalikan.',
+                                          ),
+                                        ),
+                                      );
+                                      Navigator.of(context).pop();
+                                    }
                                   },
                                 )
                               : null,
