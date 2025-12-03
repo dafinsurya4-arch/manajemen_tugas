@@ -7,6 +7,8 @@ import '../models/notification_model.dart';
 import '../models/user_model.dart';
 
 class NotificationScreen extends StatelessWidget {
+  const NotificationScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context, listen: false);

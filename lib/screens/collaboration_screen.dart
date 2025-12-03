@@ -9,8 +9,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/task_service.dart';
 import '../models/task_model.dart';
 import 'package:intl/intl.dart';
+import 'group_chat_screen.dart';
 
 class CollaborationScreen extends StatefulWidget {
+  const CollaborationScreen({super.key});
+
   @override
   _CollaborationScreenState createState() => _CollaborationScreenState();
 }
@@ -31,8 +34,6 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
         }
 
         final user = userSnapshot.data!;
-
-        // Body stream for groups
         final groupsStream = Provider.of<GroupService>(
           context,
         ).getUserGroups(user.groups);
@@ -190,11 +191,11 @@ class GroupDetailModal extends StatefulWidget {
   final String currentUid;
 
   const GroupDetailModal({
-    Key? key,
+    super.key,
     required this.parentContext,
     required this.group,
     required this.currentUid,
-  }) : super(key: key);
+  });
 
   @override
   _GroupDetailModalState createState() => _GroupDetailModalState();
@@ -205,6 +206,7 @@ class _GroupDetailModalState extends State<GroupDetailModal> {
   final TextEditingController _taskTitleController = TextEditingController();
   final TextEditingController _deadlineController = TextEditingController();
   DateTime? _selectedDeadline;
+
   Future<void> _selectDeadline(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -231,6 +233,7 @@ class _GroupDetailModalState extends State<GroupDetailModal> {
     _inviteController.dispose();
     _taskTitleController.dispose();
     _deadlineController.dispose();
+    // chat controller removed (chat moved to separate screen)
     super.dispose();
   }
 
@@ -372,6 +375,22 @@ class _GroupDetailModalState extends State<GroupDetailModal> {
                 ),
 
                 SizedBox(height: 12),
+                // Chat navigation - open dedicated chat screen
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => GroupChatScreen(
+                          groupId: group.id,
+                          groupName: group.name,
+                          currentUid: widget.currentUid,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: Icon(Icons.chat_bubble_outline),
+                  label: Text('Buka Chat Kelompok'),
+                ),
                 Text(
                   'Tugas Kelompok:',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -470,19 +489,19 @@ class _GroupDetailModalState extends State<GroupDetailModal> {
                                           itemBuilder: (context) => [
                                             PopupMenuItem(
                                               value: 'tertunda',
-                                              child: Text('Tertunda'),
                                               enabled:
                                                   task.status != 'tertunda',
+                                              child: Text('Tertunda'),
                                             ),
                                             PopupMenuItem(
                                               value: 'progres',
-                                              child: Text('Dalam Progres'),
                                               enabled: task.status != 'progres',
+                                              child: Text('Dalam Progres'),
                                             ),
                                             PopupMenuItem(
                                               value: 'selesai',
-                                              child: Text('Selesai'),
                                               enabled: task.status != 'selesai',
+                                              child: Text('Selesai'),
                                             ),
                                           ],
                                         ),
@@ -501,8 +520,9 @@ class _GroupDetailModalState extends State<GroupDetailModal> {
                                               .doc(task.assignedTo)
                                               .snapshots(),
                                           builder: (ctx, asnSnap) {
-                                            if (!asnSnap.hasData)
+                                            if (!asnSnap.hasData) {
                                               return Text('Loading...');
+                                            }
                                             final userMap =
                                                 asnSnap.data!.data()
                                                     as Map<String, dynamic>?;

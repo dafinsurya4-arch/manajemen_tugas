@@ -8,6 +8,8 @@ import 'collaboration_screen.dart';
 import 'notification_screen.dart';
 
 class MainApp extends StatefulWidget {
+  const MainApp({super.key});
+
   @override
   _MainAppState createState() => _MainAppState();
 }

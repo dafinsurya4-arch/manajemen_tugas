@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }
@@ -255,12 +257,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: _register,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 15),
+                        ),
                         child: Text(
                           'Daftar',
                           style: TextStyle(fontSize: 16),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 15),
                         ),
                       ),
                     ),

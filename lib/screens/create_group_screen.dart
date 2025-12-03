@@ -5,6 +5,8 @@ import '../models/group_model.dart';
 import '../services/auth_service.dart';
 
 class CreateGroupScreen extends StatefulWidget {
+  const CreateGroupScreen({super.key});
+
   @override
   _CreateGroupScreenState createState() => _CreateGroupScreenState();
 }

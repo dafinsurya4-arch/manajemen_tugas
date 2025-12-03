@@ -89,8 +89,12 @@ class TaskService {
 
     void emitMerged() {
       final Map<String, TaskModel> map = {};
-      for (var t in lastPersonal) map[t.id] = t;
-      for (var t in lastAssigned) map[t.id] = t;
+      for (var t in lastPersonal) {
+        map[t.id] = t;
+      }
+      for (var t in lastAssigned) {
+        map[t.id] = t;
+      }
       final merged = map.values.toList();
       merged.sort((a, b) => a.deadline.compareTo(b.deadline));
       controller.add(merged);

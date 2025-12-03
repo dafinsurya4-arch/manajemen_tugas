@@ -8,6 +8,8 @@ import '../screens/group_picker_screen.dart';
 import '../models/group_model.dart';
 
 class AddTaskScreen extends StatefulWidget {
+  const AddTaskScreen({super.key});
+
   @override
   _AddTaskScreenState createState() => _AddTaskScreenState();
 }
@@ -77,14 +79,15 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         // If collaboration is kelompok, ensure a group was selected and the current user is the group's leader
         if (_collaboration == 'kelompok') {
           if (_selectedGroup == null) {
-            if (mounted)
+            if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Pilih kelompok terlebih dahulu')),
               );
+            }
             return;
           }
           if (currentUserId != _selectedGroup!.leader) {
-            if (mounted)
+            if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
@@ -92,6 +95,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ),
               );
+            }
             return;
           }
         }
@@ -185,7 +189,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             ),
             SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _status,
+              initialValue: _status,
               decoration: InputDecoration(
                 labelText: 'Status Tugas',
                 border: OutlineInputBorder(),
@@ -206,7 +210,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             ),
             SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _collaboration,
+              initialValue: _collaboration,
               decoration: InputDecoration(
                 labelText: 'Kolaborasi',
                 border: OutlineInputBorder(),

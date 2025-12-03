@@ -20,6 +20,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -47,6 +49,8 @@ class MyApp extends StatelessWidget {
 }
 
 class SplashLauncher extends StatefulWidget {
+  const SplashLauncher({super.key});
+
   @override
   _SplashLauncherState createState() => _SplashLauncherState();
 }
@@ -74,6 +78,8 @@ class _SplashLauncherState extends State<SplashLauncher> {
 }
 
 class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context, listen: false);
