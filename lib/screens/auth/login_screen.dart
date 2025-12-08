@@ -259,6 +259,7 @@ class _LoginScreenState extends State<LoginScreen>
                                                     ),
                                                     textAlign: TextAlign.center,
                                                   ),
+<<<<<<< HEAD
                                                   SizedBox(height: 18),
                                                   TextFormField(
                                                     style: TextStyle(
@@ -291,6 +292,38 @@ class _LoginScreenState extends State<LoginScreen>
                                                         Icons.email,
                                                         color: Colors.white70,
                                                       ),
+=======
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      _obscurePassword = !_obscurePassword;
+                                                    });
+                                                  },
+                                                ),
+                                                contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                                              ),
+                                              obscureText: _obscurePassword,
+                                              validator: (value) {
+                                                if (value == null || value.isEmpty) {
+                                                  return 'Kata Sandi harus diisi';
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                            SizedBox(height: 24),
+                                            _isLoading
+                                                ? CircularProgressIndicator()
+                                                : SizedBox(
+                                                    width: double.infinity,
+                                                    child: ElevatedButton(
+                                                      onPressed: _login,
+                                                      style: ElevatedButton.styleFrom(
+                                                        padding: EdgeInsets.symmetric(vertical: 15),
+                                                      ),
+                                                      child: Text(
+                                                        'Masuk',
+                                                        style: TextStyle(fontSize: 16),
+                                                      ),
+>>>>>>> f2e3d166f6881b2d555229faf4872a27c63e8582
                                                     ),
                                                     keyboardType: TextInputType
                                                         .emailAddress,
