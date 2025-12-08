@@ -29,7 +29,6 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     // Create a diagonal background gradient from light-blue -> dark-blue -> light-blue
     return Scaffold(
-<<<<<<< HEAD
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -61,35 +60,6 @@ class _SplashScreenState extends State<SplashScreen> {
                   curve: Curves.easeOut,
                   child: Icon(Icons.assignment, size: 80, color: Colors.white),
                 ),
-=======
-      backgroundColor: Colors.blue,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.assignment, size: 80, color: Colors.white),
-            SizedBox(height: 20),
-            RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Edu',
-                    style: TextStyle(
-                      fontSize: 32,
-                      color: Colors.white,
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-                  TextSpan(
-                    text: 'Track',
-                    style: TextStyle(
-                      fontSize: 32,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
->>>>>>> f2e3d166f6881b2d555229faf4872a27c63e8582
               ),
               SizedBox(height: 20),
               AnimatedSlide(

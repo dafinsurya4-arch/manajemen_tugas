@@ -9,7 +9,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/task_service.dart';
 import '../models/task_model.dart';
 import 'package:intl/intl.dart';
-import 'group_chat_screen.dart';
 
 class CollaborationScreen extends StatefulWidget {
   const CollaborationScreen({super.key});
@@ -55,6 +54,8 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
         }
 
         final user = userSnapshot.data!;
+
+        // Body stream for groups
         final groupsStream = Provider.of<GroupService>(
           context,
           listen: false,
@@ -265,17 +266,10 @@ class GroupDetailModal extends StatefulWidget {
   final BuildContext parentContext;
 
   const GroupDetailModal({
-<<<<<<< HEAD
     required this.group,
     required this.currentUid,
     required this.parentContext,
     super.key,
-=======
-    super.key,
-    required this.parentContext,
-    required this.group,
-    required this.currentUid,
->>>>>>> f2e3d166f6881b2d555229faf4872a27c63e8582
   });
 
   @override
@@ -289,7 +283,6 @@ class _GroupDetailModalState extends State<GroupDetailModal>
   late TextEditingController _deadlineController;
   late TextEditingController _taskDescriptionController;
   DateTime? _selectedDeadline;
-<<<<<<< HEAD
   bool _showAddTaskPanel = false;
   bool _showInvitePanel = false;
 
@@ -310,8 +303,6 @@ class _GroupDetailModalState extends State<GroupDetailModal>
     _taskDescriptionController.dispose();
     super.dispose();
   }
-=======
->>>>>>> f2e3d166f6881b2d555229faf4872a27c63e8582
 
   Future<void> _selectDeadline(BuildContext context) async {
     final now = DateTime.now();
@@ -330,24 +321,6 @@ class _GroupDetailModalState extends State<GroupDetailModal>
   }
 
   @override
-<<<<<<< HEAD
-=======
-  void initState() {
-    super.initState();
-    _inviteController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _inviteController.dispose();
-    _taskTitleController.dispose();
-    _deadlineController.dispose();
-    // chat controller removed (chat moved to separate screen)
-    super.dispose();
-  }
-
-  @override
->>>>>>> f2e3d166f6881b2d555229faf4872a27c63e8582
   Widget build(BuildContext context) {
     final group = widget.group;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
@@ -1018,401 +991,9 @@ class _GroupDetailModalState extends State<GroupDetailModal>
                 ),
               ),
 
-<<<<<<< HEAD
               // leader controls or simple close button
               leaderControls,
             ],
-=======
-                SizedBox(height: 12),
-                // Chat navigation - open dedicated chat screen
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => GroupChatScreen(
-                          groupId: group.id,
-                          groupName: group.name,
-                          currentUid: widget.currentUid,
-                        ),
-                      ),
-                    );
-                  },
-                  icon: Icon(Icons.chat_bubble_outline),
-                  label: Text('Buka Chat Kelompok'),
-                ),
-                Text(
-                  'Tugas Kelompok:',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8),
-
-                // Tasks list - fixed height with scroll
-                SizedBox(
-                  height: 250,
-                  child: StreamBuilder<List<TaskModel>>(
-                    stream: Provider.of<TaskService>(
-                      widget.parentContext,
-                      listen: false,
-                    ).getGroupTasks(group.id),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return Center(child: CircularProgressIndicator());
-                      }
-                      final tasks = snapshot.data!;
-                      if (tasks.isEmpty) {
-                        return Center(child: Text('Belum ada tugas.'));
-                      }
-                      return ListView.builder(
-                        itemCount: tasks.length,
-                        itemBuilder: (context, tIndex) {
-                          final task = tasks[tIndex];
-                          return Card(
-                            margin: EdgeInsets.symmetric(vertical: 6),
-                            child: ListTile(
-                              title: Text(task.title),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(task.description),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        margin: EdgeInsets.symmetric(
-                                          vertical: 4,
-                                        ),
-                                        child: Chip(
-                                          label: Text(
-                                            task.status == 'tertunda'
-                                                ? 'Tertunda'
-                                                : task.status == 'progres'
-                                                ? 'Dalam Progres'
-                                                : 'Selesai',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                          backgroundColor:
-                                              task.status == 'tertunda'
-                                              ? Colors.orange
-                                              : task.status == 'progres'
-                                              ? Colors.blue
-                                              : Colors.green,
-                                        ),
-                                      ),
-                                      if (task.assignedTo == widget.currentUid)
-                                        PopupMenuButton<String>(
-                                          icon: Icon(Icons.more_vert, size: 20),
-                                          onSelected: (String newStatus) async {
-                                            try {
-                                              await Provider.of<TaskService>(
-                                                widget.parentContext,
-                                                listen: false,
-                                              ).updateTaskStatus(
-                                                task.id,
-                                                newStatus,
-                                              );
-                                              if (!mounted) return;
-                                              ScaffoldMessenger.of(
-                                                widget.parentContext,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    'Status tugas diperbarui',
-                                                  ),
-                                                ),
-                                              );
-                                            } catch (e) {
-                                              if (!mounted) return;
-                                              ScaffoldMessenger.of(
-                                                widget.parentContext,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    'Gagal memperbarui status: $e',
-                                                  ),
-                                                ),
-                                              );
-                                            }
-                                          },
-                                          itemBuilder: (context) => [
-                                            PopupMenuItem(
-                                              value: 'tertunda',
-                                              enabled:
-                                                  task.status != 'tertunda',
-                                              child: Text('Tertunda'),
-                                            ),
-                                            PopupMenuItem(
-                                              value: 'progres',
-                                              enabled: task.status != 'progres',
-                                              child: Text('Dalam Progres'),
-                                            ),
-                                            PopupMenuItem(
-                                              value: 'selesai',
-                                              enabled: task.status != 'selesai',
-                                              child: Text('Selesai'),
-                                            ),
-                                          ],
-                                        ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Deadline: ${DateFormat('dd/MM/yyyy').format(task.deadline)}',
-                                  ),
-                                  SizedBox(height: 4),
-                                  task.assignedTo == null
-                                      ? Text('Belum diambil')
-                                      : StreamBuilder<DocumentSnapshot>(
-                                          stream: FirebaseFirestore.instance
-                                              .collection('users')
-                                              .doc(task.assignedTo)
-                                              .snapshots(),
-                                          builder: (ctx, asnSnap) {
-                                            if (!asnSnap.hasData) {
-                                              return Text('Loading...');
-                                            }
-                                            final userMap =
-                                                asnSnap.data!.data()
-                                                    as Map<String, dynamic>?;
-                                            final name =
-                                                userMap?['fullName']
-                                                    as String? ??
-                                                'Unknown';
-                                            return Text('Diambil oleh: $name');
-                                          },
-                                        ),
-                                ],
-                              ),
-                              trailing:
-                                  task.assignedTo == null &&
-                                      group.members.contains(widget.currentUid)
-                                  ? ElevatedButton(
-                                      child: Text('Ambil'),
-                                      onPressed: () async {
-                                        try {
-                                          await Provider.of<TaskService>(
-                                            widget.parentContext,
-                                            listen: false,
-                                          ).updateTaskAssignment(
-                                            task.id,
-                                            widget.currentUid,
-                                          );
-                                          if (!mounted) return;
-                                          ScaffoldMessenger.of(
-                                            widget.parentContext,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text('Tugas diambil'),
-                                            ),
-                                          );
-                                        } catch (e) {
-                                          if (!mounted) return;
-                                          ScaffoldMessenger.of(
-                                            widget.parentContext,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                'Gagal mengambil tugas: $e',
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                    )
-                                  : null,
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-                SizedBox(height: 12),
-                if (group.leader == widget.currentUid)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Divider(),
-                      Text('Tambah Tugas (Ketua):'),
-                      SizedBox(height: 8),
-                      TextField(
-                        controller: _taskTitleController,
-                        decoration: InputDecoration(
-                          hintText: 'Judul tugas',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      TextField(
-                        controller: _deadlineController,
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          hintText: 'Pilih deadline',
-                          border: OutlineInputBorder(),
-                          suffixIcon: IconButton(
-                            icon: Icon(Icons.calendar_today),
-                            onPressed: () => _selectDeadline(context),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                final title = _taskTitleController.text.trim();
-                                if (title.isEmpty ||
-                                    _selectedDeadline == null) {
-                                  ScaffoldMessenger.of(
-                                    widget.parentContext,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Isi judul dan pilih deadline',
-                                      ),
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                final authService = Provider.of<AuthService>(
-                                  widget.parentContext,
-                                  listen: false,
-                                );
-                                final currentUid =
-                                    authService.currentUser?.uid ?? '';
-
-                                final task = TaskModel(
-                                  id: DateTime.now().millisecondsSinceEpoch
-                                      .toString(),
-                                  title: title,
-                                  description: '',
-                                  deadline: _selectedDeadline!,
-                                  status: 'tertunda',
-                                  collaboration: 'kelompok',
-                                  userId: currentUid,
-                                  groupId: group.id,
-                                  assignedTo: null,
-                                  createdBy: currentUid,
-                                  createdAt: DateTime.now(),
-                                );
-
-                                try {
-                                  await Provider.of<TaskService>(
-                                    widget.parentContext,
-                                    listen: false,
-                                  ).addTask(task);
-                                  if (!mounted) return;
-                                  _taskTitleController.clear();
-                                  _deadlineController.clear();
-                                  _selectedDeadline = null;
-                                  ScaffoldMessenger.of(
-                                    widget.parentContext,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Tugas berhasil ditambahkan',
-                                      ),
-                                    ),
-                                  );
-                                } catch (e) {
-                                  if (!mounted) return;
-                                  ScaffoldMessenger.of(
-                                    widget.parentContext,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Gagal menambahkan tugas: $e',
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                              child: Text('Tambah Tugas'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                if (group.leader == widget.currentUid)
-                  Column(
-                    children: [
-                      Divider(),
-                      Text('Undang Anggota Baru:'),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _inviteController,
-                              decoration: InputDecoration(
-                                hintText: 'Email pengguna',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.send),
-                            onPressed: () async {
-                              final email = _inviteController.text.trim();
-                              if (email.isEmpty) {
-                                ScaffoldMessenger.of(
-                                  widget.parentContext,
-                                ).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Masukkan email terlebih dahulu',
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
-
-                              final groupService = Provider.of<GroupService>(
-                                widget.parentContext,
-                                listen: false,
-                              );
-                              final authService = Provider.of<AuthService>(
-                                widget.parentContext,
-                                listen: false,
-                              );
-                              final currentUid =
-                                  authService.currentUser?.uid ?? '';
-
-                              // perform invite
-                              final sent = await groupService.inviteUser(
-                                group.id,
-                                currentUid,
-                                email,
-                              );
-
-                              // Only interact with controller or show UI if still mounted
-                              if (!mounted) return;
-
-                              _inviteController.clear();
-                              ScaffoldMessenger.of(
-                                widget.parentContext,
-                              ).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    sent
-                                        ? 'Undangan telah dikirim'
-                                        : 'Pengguna dengan email tersebut tidak ditemukan',
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-              ],
-            ),
->>>>>>> f2e3d166f6881b2d555229faf4872a27c63e8582
           ),
         ),
       ),

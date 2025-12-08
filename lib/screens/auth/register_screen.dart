@@ -314,18 +314,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         onPressed: _register,
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 15),
-<<<<<<< HEAD
                           backgroundColor: const Color(0xFF0D47A1),
                           foregroundColor: Colors.white,
                         ),
                         child: Text('Daftar', style: TextStyle(fontSize: 16)),
-=======
-                        ),
-                        child: Text(
-                          'Daftar',
-                          style: TextStyle(fontSize: 16),
-                        ),
->>>>>>> f2e3d166f6881b2d555229faf4872a27c63e8582
                       ),
                     ),
               SizedBox(height: 16),

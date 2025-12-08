@@ -73,33 +73,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           );
         }
 
-<<<<<<< HEAD
         // This screen only allows individual tasks, so no group validation performed
-=======
-        // If collaboration is kelompok, ensure a group was selected and the current user is the group's leader
-        if (_collaboration == 'kelompok') {
-          if (_selectedGroup == null) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Pilih kelompok terlebih dahulu')),
-              );
-            }
-            return;
-          }
-          if (currentUserId != _selectedGroup!.leader) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Hanya ketua kelompok yang dapat menambahkan tugas kelompok',
-                  ),
-                ),
-              );
-            }
-            return;
-          }
-        }
->>>>>>> f2e3d166f6881b2d555229faf4872a27c63e8582
 
         await Provider.of<TaskService>(context, listen: false).addTask(task);
 
@@ -199,7 +173,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             ),
             SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              initialValue: _status,
+              value: _status,
               decoration: InputDecoration(
                 labelText: 'Status Tugas',
                 border: OutlineInputBorder(),
@@ -219,53 +193,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               },
             ),
             SizedBox(height: 16),
-<<<<<<< HEAD
-=======
-            DropdownButtonFormField<String>(
-              initialValue: _collaboration,
-              decoration: InputDecoration(
-                labelText: 'Kolaborasi',
-                border: OutlineInputBorder(),
-              ),
-              items: [
-                DropdownMenuItem(value: 'individu', child: Text('Individu')),
-                DropdownMenuItem(value: 'kelompok', child: Text('Kelompok')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _collaboration = value!;
-                });
-              },
-            ),
-            SizedBox(height: 12),
-            if (_collaboration == 'kelompok')
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        final selected = await Navigator.push<GroupModel?>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => GroupPickerScreen(),
-                          ),
-                        );
-                        if (selected != null) {
-                          setState(() {
-                            _selectedGroup = selected;
-                          });
-                        }
-                      },
-                      child: Text(
-                        _selectedGroup == null
-                            ? 'Pilih Kelompok'
-                            : 'Kelompok: ${_selectedGroup!.name}',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
->>>>>>> f2e3d166f6881b2d555229faf4872a27c63e8582
             SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: _saveTask,
