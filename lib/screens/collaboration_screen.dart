@@ -139,6 +139,21 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
+                                SizedBox(height: 12),
+                                ElevatedButton.icon(
+                                  icon: Icon(Icons.group_add),
+                                  label: Text('Buat Kelompok'),
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  onPressed: () async {
+                                    await Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => CreateGroupScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
                               ],
                             ),
                           )

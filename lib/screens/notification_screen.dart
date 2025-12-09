@@ -67,9 +67,7 @@ class NotificationScreen extends StatelessWidget {
                     child: ListTile(
                       title: Text(notification.title),
                       subtitle: Text(notification.message),
-                      trailing:
-                          notification.type == 'group_invitation' &&
-                              !notification.isRead
+                      trailing: notification.type == 'group_invitation'
                           ? Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -136,10 +134,15 @@ class NotificationScreen extends StatelessWidget {
                             )
                           : null,
                       onTap: () {
-                        Provider.of<NotificationService>(
-                          context,
-                          listen: false,
-                        ).markAsRead(notification.id);
+                        // Only mark notification as read on tap for non-invitation notifications.
+                        // Invitation notifications have explicit accept/reject actions; marking
+                        // as read on tap would hide those action buttons, which we avoid.
+                        if (notification.type != 'group_invitation') {
+                          Provider.of<NotificationService>(
+                            context,
+                            listen: false,
+                          ).markAsRead(notification.id);
+                        }
                       },
                     ),
                   );
