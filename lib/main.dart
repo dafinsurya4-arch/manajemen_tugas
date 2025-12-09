@@ -8,6 +8,7 @@ import 'services/auth_service.dart';
 import 'services/task_service.dart';
 import 'services/group_service.dart';
 import 'services/notification_service.dart';
+import 'services/message_service.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/main_app.dart';
@@ -30,6 +31,8 @@ class MyApp extends StatelessWidget {
         Provider<TaskService>(create: (_) => TaskService()),
         Provider<GroupService>(create: (_) => GroupService()),
         Provider<NotificationService>(create: (_) => NotificationService()),
+        // Message service provides group message collections and sending methods
+        Provider<MessageService>(create: (_) => MessageService()),
       ],
       child: MaterialApp(
         title: 'EduTrack',

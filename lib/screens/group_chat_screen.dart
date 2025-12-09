@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/message_model.dart';
 import '../services/message_service.dart';
@@ -21,7 +22,7 @@ class GroupChatScreen extends StatefulWidget {
 }
 
 class _GroupChatScreenState extends State<GroupChatScreen> {
-  final MessageService _messageService = MessageService();
+  // Using MessageService via Provider; no local field needed.
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -43,7 +44,10 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       createdAt: DateTime.now(),
     );
     try {
-      await _messageService.sendMessage(widget.groupId, message);
+      await Provider.of<MessageService>(
+        context,
+        listen: false,
+      ).sendMessage(widget.groupId, message);
       _controller.clear();
       // scroll to bottom after a short delay
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -66,12 +70,17 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.groupName)),
+      appBar: AppBar(
+        foregroundColor: Colors.white,
+        title: Text(widget.groupName, style: TextStyle(color: Colors.white)),
+      ),
       body: Column(
         children: [
           Expanded(
             child: StreamBuilder<List<MessageModel>>(
-              stream: _messageService.streamMessages(widget.groupId),
+              stream: Provider.of<MessageService>(
+                context,
+              ).streamMessages(widget.groupId),
               builder: (context, snap) {
                 if (snap.connectionState == ConnectionState.waiting)
                   return Center(child: CircularProgressIndicator());
@@ -180,7 +189,13 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                   ),
                 ),
                 SizedBox(width: 8),
-                ElevatedButton(onPressed: _send, child: Icon(Icons.send)),
+                ElevatedButton(
+                  onPressed: _send,
+                  child: Icon(Icons.send),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                  ),
+                ),
               ],
             ),
           ),

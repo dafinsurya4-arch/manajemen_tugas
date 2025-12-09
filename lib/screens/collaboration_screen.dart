@@ -7,6 +7,7 @@ import '../services/auth_service.dart';
 import '../models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/task_service.dart';
+import 'group_chat_screen.dart';
 import '../models/task_model.dart';
 import 'package:intl/intl.dart';
 
@@ -165,6 +166,25 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
                               return Card(
                                 margin: EdgeInsets.symmetric(vertical: 4),
                                 child: ListTile(
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(Icons.chat),
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => GroupChatScreen(
+                                                groupId: group.id,
+                                                groupName: group.name,
+                                                currentUid: user.uid,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
                                   title: Text(
                                     group.name,
                                     style: TextStyle(
@@ -612,7 +632,7 @@ class _GroupDetailModalState extends State<GroupDetailModal>
         padding: EdgeInsets.only(bottom: bottomInset),
         child: Container(
           height: maxModalHeight,
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -628,9 +648,28 @@ class _GroupDetailModalState extends State<GroupDetailModal>
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.chat),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => GroupChatScreen(
+                                groupId: group.id,
+                                groupName: group.name,
+                                currentUid: widget.currentUid,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
                   ),
                 ],
               ),
